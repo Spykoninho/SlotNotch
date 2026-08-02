@@ -7,7 +7,7 @@ cask "slotch" do
   version "1.1"
   sha256 "05bff3a69b9cb84faf8d5eff91998b7331a1451a71687be79b59f462a89f0aa5"
 
-  url "https://github.com/Spykoninho/SlotNotch/releases/download/v#{version}/Slotch-#{version}.dmg"
+  url "https://github.com/Spykoninho/SlotNotch/releases/download/#{version}/Slotch-#{version}.dmg"
   name "Slotch"
   desc "Slot machine hiding behind your Mac's notch"
   homepage "https://github.com/Spykoninho/SlotNotch"
