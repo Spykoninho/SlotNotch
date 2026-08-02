@@ -3,138 +3,680 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Slotch — le bandit à encoche</title>
-<meta name="description" content="Une machine à sous cachée derrière le notch de ton Mac. Approche ton curseur, tire le levier.">
+<title>Slotch — la machine à sous cachée dans le notch</title>
+<meta name="description" content="Une machine à sous qui se cache derrière le notch de ton Mac. Essaie-la directement dans la page.">
 <link rel="icon" href="assets/icon.png">
 <style>
   :root {
-    --bg: #120409;
-    --burgundy: #2a070d;
+    --bg: #0b0a09;
+    --text: #f4f1ea;
+    --muted: rgba(244, 241, 234, 0.55);
+    --hair: rgba(244, 241, 234, 0.09);
     --gold: #d9b45a;
-    --gold-bright: #f2dc8f;
-    --gold-dark: #8a6a28;
-    --ivory: #f2ead8;
-    --amber: #ffaf36;
+    --gold-soft: rgba(217, 180, 90, 0.16);
+    --amber: #ffb03a;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--burgundy), var(--bg) 70%);
-    color: var(--ivory);
-    font: 17px/1.65 Georgia, 'Times New Roman', serif;
-    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
-  header { text-align: center; padding: 72px 0 24px; }
-  .icon { width: 116px; height: 116px; }
-  h1 {
-    font-family: Copperplate, 'Copperplate Gothic', Georgia, serif;
-    font-size: 56px; letter-spacing: 14px; text-indent: 14px;
-    margin-top: 18px;
-    background: linear-gradient(180deg, var(--gold-bright), var(--gold) 55%, var(--gold-dark));
-    -webkit-background-clip: text; background-clip: text; color: transparent;
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 28px 0; }
+  .wordmark { font-size: 13px; font-weight: 600; letter-spacing: 5px; color: var(--gold); text-decoration: none; }
+  nav a.gh { color: var(--muted); text-decoration: none; font-size: 14px; }
+  nav a.gh:hover { color: var(--text); }
+
+  .hero { text-align: center; padding: 72px 0 48px; }
+  .hero h1 {
+    font-size: clamp(38px, 6vw, 62px); font-weight: 700; letter-spacing: -0.022em; line-height: 1.08;
+    max-width: 17ch; margin: 0 auto;
   }
-  .tagline { font-style: italic; opacity: 0.85; margin-top: 6px; font-size: 19px; }
-  .sub { opacity: 0.6; font-size: 14px; margin-top: 4px; letter-spacing: 1px; }
-  .cta { margin: 36px 0 8px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p.lead { color: var(--muted); font-size: 18px; max-width: 46ch; margin: 22px auto 0; }
+  .cta { margin-top: 34px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; align-items: center; }
   .btn {
-    display: inline-block; padding: 13px 30px; border-radius: 10px;
-    font-family: Copperplate, Georgia, serif; letter-spacing: 2px; font-size: 16px;
-    text-decoration: none; color: #1c1005;
-    background: linear-gradient(180deg, var(--gold-bright), var(--gold) 60%, var(--gold-dark));
-    border: 1px solid var(--gold-dark);
-    box-shadow: 0 6px 22px rgba(217, 180, 90, 0.25), inset 0 1px 0 rgba(255,255,255,0.5);
+    display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 12px;
+    background: var(--text); color: #111; font-weight: 600; font-size: 15px; text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
   }
-  .btn:hover { filter: brightness(1.08); }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(255,255,255,0.12); }
   .brew {
-    font: 14px/1 ui-monospace, Menlo, monospace; color: var(--amber);
-    background: #1a0d05; border: 1px solid #4a3820; border-radius: 8px; padding: 13px 18px;
+    display: inline-flex; align-items: center; gap: 10px;
+    font: 13px ui-monospace, "SF Mono", Menlo, monospace; color: var(--muted);
+    background: rgba(255,255,255,0.04); border: 1px solid var(--hair); border-radius: 12px;
+    padding: 12px 16px; cursor: pointer; transition: border-color 0.15s;
   }
-  .hero { display: block; width: 100%; max-width: 780px; margin: 34px auto 0; }
-  .rule {
-    height: 2px; margin: 56px auto; max-width: 520px; border: 0;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  .brew:hover { border-color: rgba(244,241,234,0.25); color: var(--text); }
+  .meta { margin-top: 18px; font-size: 13px; color: var(--muted); letter-spacing: 0.3px; }
+
+  /* ---------- Démo : l'écran de Mac ---------- */
+  .demo { padding: 40px 0 0; position: relative; }
+  .demo::before {
+    content: ""; position: absolute; inset: -40px 0 auto; height: 480px; pointer-events: none;
+    background: radial-gradient(ellipse 55% 60% at 50% 45%, var(--gold-soft), transparent 70%);
   }
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
-  .card {
-    background: rgba(42, 7, 13, 0.55); border: 1px solid rgba(217, 180, 90, 0.35);
-    border-radius: 14px; padding: 26px 24px;
+  .macwrap { display: flex; justify-content: center; position: relative; }
+  .mac { transform-origin: top center; }
+  .screen {
+    position: relative; width: 720px; height: 450px; overflow: hidden;
+    border-radius: 18px; border: 1px solid rgba(255,255,255,0.14);
+    background:
+      radial-gradient(ellipse 90% 80% at 75% 10%, #2b1c3f 0%, transparent 55%),
+      radial-gradient(ellipse 80% 90% at 15% 90%, #14243a 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 45% 55%, #3a1626 0%, transparent 65%),
+      #0d0f1a;
+    box-shadow: 0 0 0 8px #060607, 0 0 0 9px rgba(255,255,255,0.08), 0 40px 90px rgba(0,0,0,0.6);
+    cursor: default;
   }
-  .card h3 {
-    font-family: Copperplate, Georgia, serif; letter-spacing: 2px; font-size: 17px;
-    color: var(--gold); margin-bottom: 10px;
+  .menubar {
+    position: absolute; top: 0; left: 0; right: 0; height: 26px; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
+    background: rgba(10, 10, 14, 0.55); backdrop-filter: blur(6px);
+    font-size: 11.5px; color: rgba(255,255,255,0.75); pointer-events: none;
   }
-  .card p { font-size: 15.5px; opacity: 0.9; }
-  h2 {
-    font-family: Copperplate, Georgia, serif; letter-spacing: 4px; font-size: 24px;
-    color: var(--gold); text-align: center; margin-bottom: 28px;
+  .menubar .l, .menubar .r { display: flex; gap: 14px; }
+  .menubar b { font-weight: 700; }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 31;
+    width: 168px; height: 30px; background: #000; border-radius: 0 0 12px 12px; cursor: pointer;
   }
-  table { width: 100%; max-width: 640px; margin: 0 auto; border-collapse: collapse; font-size: 15.5px; }
-  td { padding: 10px 14px; border-bottom: 1px solid rgba(217, 180, 90, 0.18); }
-  td:first-child { font-family: Copperplate, Georgia, serif; letter-spacing: 1px; color: var(--gold-bright); white-space: nowrap; }
-  footer { text-align: center; padding: 64px 0 44px; opacity: 0.55; font-size: 14px; }
-  footer a { color: var(--gold); }
-  @media (max-width: 600px) { h1 { font-size: 38px; letter-spacing: 8px; } }
+  .hint {
+    text-align: center; margin-top: 26px; font-size: 13.5px; color: var(--muted); letter-spacing: 0.2px;
+  }
+  .hint b { color: var(--gold); font-weight: 600; }
+
+  /* ---------- La machine ---------- */
+  .pill {
+    position: absolute; top: 0; left: 50%; z-index: 20;
+    width: 340px; height: 156px;
+    transform: translateX(-50%) translateY(-140%);
+    transition: transform 0.5s cubic-bezier(0.3, 1.25, 0.4, 1);
+    filter: drop-shadow(0 14px 22px rgba(0,0,0,0.55));
+  }
+  .pill.out { transform: translateX(-50%) translateY(0); }
+  .pill-body {
+    position: absolute; inset: 0; background: #000; border-radius: 0 0 26px 26px; cursor: pointer;
+  }
+  .face {
+    position: absolute; inset: 34px 5px 5px 5px; border-radius: 11px;
+    background:
+      radial-gradient(ellipse 120% 90% at 50% 40%, rgba(255,255,255,0.05), transparent 50%),
+      radial-gradient(ellipse 140% 120% at 50% 55%, transparent 55%, rgba(0,0,0,0.5) 100%),
+      #33090f;
+    border: 2px solid #96742c;
+    box-shadow:
+      inset 0 0 0 1.5px rgba(242, 220, 143, 0.5),
+      inset 0 0 0 3.5px rgba(60, 40, 8, 0.9),
+      inset 0 0 22px rgba(0,0,0,0.55);
+  }
+  .plaque {
+    position: absolute; top: 38px; left: 50%; transform: translateX(-50%);
+    padding: 2px 14px; border-radius: 4px;
+    background: linear-gradient(180deg, #caa044, #f2dc8f 45%, #8a6a28);
+    border: 1px solid #6d5220;
+    font: 700 8.5px Copperplate, "Copperplate Gothic", Georgia, serif;
+    letter-spacing: 3.5px; color: #2e1c06; text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+    white-space: nowrap;
+  }
+  .jewel {
+    position: absolute; top: 40px; right: 16px; width: 12px; height: 12px; border-radius: 50%;
+    background: #1a0a06; border: 2px solid #96742c;
+  }
+  .jewel i {
+    position: absolute; inset: 2px; border-radius: 50%; background: var(--amber);
+    box-shadow: 0 0 6px var(--amber); animation: pulse 1.4s ease-in-out infinite alternate;
+  }
+  .jewel.spin i { background: #ffd84a; box-shadow: 0 0 6px #ffd84a; animation-duration: 0.25s; }
+  .jewel.win i { background: #35d461; box-shadow: 0 0 7px #35d461; }
+  .jewel.lose i { background: #ff453a; box-shadow: 0 0 7px #ff453a; }
+  @keyframes pulse { from { opacity: 1; } to { opacity: 0.35; } }
+  .coinslot {
+    position: absolute; top: 39px; left: 16px; width: 12px; height: 14px; border-radius: 3px;
+    background: linear-gradient(180deg, #8a6a28, #e8cc74); border: 1px solid #6d5220;
+  }
+  .coinslot::after {
+    content: ""; position: absolute; left: 4.5px; top: 2.5px; width: 2.5px; height: 8px;
+    border-radius: 2px; background: #0a0704;
+  }
+
+  .reels { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+  .reel {
+    position: relative; width: 66px; height: 56px; border-radius: 6px; overflow: hidden;
+    background: linear-gradient(180deg, #fffdf4, #ece2c8);
+    box-shadow: 0 0 0 1.5px #2e1c06, 0 0 0 4px #b08d38, 0 0 0 5px #705416;
+  }
+  .strip { will-change: transform; }
+  .cell {
+    width: 66px; height: 56px; display: flex; align-items: center; justify-content: center;
+    border-top: 1.5px solid rgba(178, 58, 42, 0.65);
+  }
+  .cell svg { width: 40px; height: 40px; }
+  .reel::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      linear-gradient(115deg, transparent 32%, rgba(255,255,255,0.18) 46%, transparent 60%),
+      linear-gradient(180deg, rgba(20,8,2,0.4), transparent 26%, transparent 74%, rgba(20,8,2,0.38));
+  }
+
+  .bulb {
+    position: absolute; width: 9px; height: 9px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 65%, #4a3520, #241708); box-shadow: inset 0 0 0 1px #563e12;
+  }
+  .bulb.lit {
+    background: radial-gradient(circle at 50% 50%, #fff6d8, var(--amber) 55%, #c07800);
+    box-shadow: 0 0 10px 2px rgba(255, 176, 58, 0.75);
+  }
+
+  .bottomrow {
+    position: absolute; left: 12px; right: 12px; bottom: 8px; height: 22px; display: flex; gap: 6px;
+  }
+  .ticker {
+    flex: 1; position: relative; overflow: hidden; border-radius: 3px;
+    background: #150c04; border: 1px solid rgba(90, 70, 38, 0.8);
+    background-image: radial-gradient(circle, rgba(255,176,58,0.07) 1px, transparent 1.2px);
+    background-size: 3.5px 3.5px;
+  }
+  .ticker span {
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    padding: 0 8px; white-space: nowrap;
+    font: 700 9.5px ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--amber); text-shadow: 0 0 5px rgba(255, 176, 58, 0.9);
+  }
+  .ticker.gold span { color: #ffd84a; text-shadow: 0 0 5px rgba(255, 216, 74, 0.9); }
+  .ticker.red span { color: #ff5040; text-shadow: 0 0 5px rgba(255, 80, 64, 0.9); }
+  .credits {
+    width: 64px; display: flex; align-items: center; justify-content: center; gap: 5px;
+    border-radius: 3px; background: #150c04; border: 1px solid rgba(90, 70, 38, 0.8);
+  }
+  .credits small {
+    font: 700 6px Copperplate, Georgia, serif; letter-spacing: 1px; color: rgba(217, 180, 90, 0.8);
+  }
+  .credits b {
+    font: 700 13px ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 1px;
+    color: #ff3b2f; text-shadow: 0 0 6px rgba(255, 59, 47, 0.8);
+  }
+
+  .lever { position: absolute; right: -30px; top: 74px; width: 34px; height: 76px; pointer-events: none; }
+  .lever .bracket {
+    position: absolute; left: -6px; top: 38px; width: 28px; height: 15px; border-radius: 4px;
+    background: linear-gradient(180deg, #4a4a4e, #c7c7cc 55%, #6b6b70); border: 1px solid #1c1c1e;
+  }
+  .lever .arm {
+    position: absolute; left: 6px; bottom: 24px; width: 5px; height: 42px; border-radius: 3px;
+    background: linear-gradient(90deg, #58585c, #ececf0 50%, #737378);
+    transform-origin: 50% calc(100% - 4px); transition: transform 0.3s cubic-bezier(0.5, 0, 0.7, 0.3);
+  }
+  .lever .arm::after {
+    content: ""; position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+    width: 18px; height: 18px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 32%, #ff8a7a, #c61e12 55%, #6e0c06);
+  }
+  .lever.pulled .arm { transform: rotate(115deg); transition: transform 0.22s cubic-bezier(0.6, 0, 0.9, 0.4); }
+
+  /* effets dans l'écran */
+  .fx { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 25; }
+  .fx .drop { position: absolute; top: -64px; animation: fall linear forwards; }
+  @keyframes fall {
+    to { transform: translateY(540px) translateX(var(--dx)) rotate(var(--rot)); opacity: 0.95; }
+  }
+  .flash { position: absolute; inset: 0; opacity: 0; pointer-events: none; z-index: 24; }
+  .flash.red { background: #e00000; animation: flashred 0.9s ease-out; }
+  .flash.gold { background: #ffd84a; animation: flashgold 0.8s ease-out; }
+  @keyframes flashred { 0% {opacity:0} 15% {opacity:0.3} 40% {opacity:0} 60% {opacity:0.16} 100% {opacity:0} }
+  @keyframes flashgold { 0% {opacity:0} 12% {opacity:0.65} 45% {opacity:0} 70% {opacity:0.3} 100% {opacity:0} }
+  .bigwin {
+    position: absolute; left: 0; right: 0; top: 44%; text-align: center; z-index: 26; pointer-events: none;
+    font-family: Copperplate, "Copperplate Gothic", Georgia, serif; font-weight: 700;
+    font-size: 58px; letter-spacing: 6px;
+    background: linear-gradient(180deg, #fff09e, #f2c94c 55%, #8a6a28);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6));
+    animation: winpop 2.4s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+  }
+  @keyframes winpop {
+    0% { transform: scale(0.2); opacity: 0; }
+    12% { transform: scale(1.06); opacity: 1; }
+    18% { transform: scale(1); }
+    80% { opacity: 1; }
+    100% { opacity: 0; transform: scale(1.02); }
+  }
+
+  /* ---------- Sections ---------- */
+  section.block { padding: 110px 0 0; }
+  .overline {
+    font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
+  }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 40px; margin-top: 28px; }
+  .col h3 { font-size: 17px; font-weight: 650; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .col p { color: var(--muted); font-size: 15px; }
+
+  .combos { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0 48px; }
+  .combo { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--hair); }
+  .combo svg { width: 26px; height: 26px; flex: none; }
+  .combo .k { font-weight: 600; font-size: 14.5px; width: 92px; flex: none; letter-spacing: 0.2px; }
+  .combo .v { color: var(--muted); font-size: 14.5px; }
+
+  footer {
+    margin-top: 120px; padding: 36px 0 48px; border-top: 1px solid var(--hair);
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    color: var(--muted); font-size: 13.5px;
+  }
+  footer a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--hair); }
+
+  @media (max-width: 780px) {
+    .combo .k { width: auto; min-width: 76px; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <header>
-    <img class="icon" src="assets/icon.png" alt="Icône Slotch">
-    <h1>SLOTCH</h1>
-    <p class="tagline">Le Bandit à Encoche.</p>
-    <p class="sub">A slot machine hiding behind your Mac's notch — FR · EN</p>
+<!-- Symboles dessinés main, portés du code Swift -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="gRed" cx="0.35" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#ff6b57"/><stop offset="0.5" stop-color="#e6301f"/><stop offset="1" stop-color="#8c0508"/>
+    </radialGradient>
+    <linearGradient id="gGold" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#855c1a"/><stop offset="0.55" stop-color="#fACC4d"/><stop offset="1" stop-color="#fff09e"/>
+    </linearGradient>
+    <linearGradient id="gSeven" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#9e0a0f"/><stop offset="1" stop-color="#fa3829"/>
+    </linearGradient>
+    <linearGradient id="gDiam" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#3f8cd9"/><stop offset="1" stop-color="#c8ecff"/>
+    </linearGradient>
+
+    <g id="sym0"><!-- cerises -->
+      <path d="M30,50 C29,28 38,16 50,12 M68,56 C70,32 60,16 50,12" fill="none" stroke="#5c3d1a" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="63" cy="17" rx="13" ry="6.5" fill="#4a8a1f"/>
+      <circle cx="29" cy="70" r="19.5" fill="url(#gRed)"/>
+      <circle cx="68" cy="76" r="19.5" fill="url(#gRed)"/>
+      <ellipse cx="22" cy="63" rx="4.5" ry="3" fill="rgba(255,255,255,0.6)"/>
+      <ellipse cx="61" cy="69" rx="4.5" ry="3" fill="rgba(255,255,255,0.6)"/>
+    </g>
+    <g id="sym1"><!-- sept -->
+      <path d="M14,8 L88,8 L60,94 L33,94 L59,27 L14,27 Z" fill="url(#gSeven)" stroke="#f2dc8f" stroke-width="3.5" stroke-linejoin="round"/>
+    </g>
+    <g id="sym2"><!-- cloche -->
+      <path d="M16,64 C16,42 22,26 34,20 C42,7 58,7 66,20 C78,26 84,42 84,64 Z" fill="url(#gGold)" stroke="#6d5220" stroke-width="2"/>
+      <rect x="10" y="63" width="80" height="10.5" rx="5" fill="url(#gGold)" stroke="#6d5220" stroke-width="1.5"/>
+      <circle cx="50" cy="83" r="7" fill="#6d5220"/>
+      <circle cx="50" cy="15" r="5" fill="#6d5220"/>
+      <ellipse cx="33" cy="32" rx="5" ry="8" fill="rgba(255,255,255,0.4)"/>
+    </g>
+    <g id="sym3"><!-- BAR -->
+      <rect x="5" y="30" width="90" height="40" rx="9" fill="#141414" stroke="#d9b45a" stroke-width="3.5"/>
+      <text x="50" y="58" text-anchor="middle" font-family="Copperplate, Georgia, serif" font-weight="bold" font-size="25" letter-spacing="2" fill="#f2dc8f">BAR</text>
+    </g>
+    <g id="sym4"><!-- diamant -->
+      <path d="M50,92 L12,42 L30,14 L70,14 L88,42 Z" fill="url(#gDiam)" stroke="#2a628f" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M12,42 L88,42 M50,92 L33,42 M50,92 L67,42 M30,14 L50,42 M70,14 L50,42" stroke="rgba(255,255,255,0.75)" stroke-width="1.6" fill="none"/>
+    </g>
+    <g id="sym5"><!-- fer à cheval -->
+      <path d="M35,22 A30 30 0 1 0 65,22" fill="none" stroke="#6d5220" stroke-width="15"/>
+      <path d="M35,22 A30 30 0 1 0 65,22" fill="none" stroke="url(#gGold)" stroke-width="9"/>
+      <rect x="26" y="15" width="17" height="7.5" rx="2" fill="#f2dc8f" stroke="#6d5220"/>
+      <rect x="57" y="15" width="17" height="7.5" rx="2" fill="#f2dc8f" stroke="#6d5220"/>
+      <g fill="#402c0c">
+        <circle cx="25.4" cy="30.8" r="2.4"/><circle cx="21" cy="55.8" r="2.4"/><circle cx="37.3" cy="75.2" r="2.4"/>
+        <circle cx="62.7" cy="75.2" r="2.4"/><circle cx="79" cy="55.8" r="2.4"/><circle cx="74.6" cy="30.8" r="2.4"/>
+      </g>
+    </g>
+    <g id="coin">
+      <circle cx="50" cy="50" r="45" fill="url(#gGold)"/>
+      <circle cx="50" cy="50" r="34" fill="none" stroke="#6d5220" stroke-width="3"/>
+      <path d="M50,68 L63,50 L50,32 L37,50 Z" fill="#fff3b0"/>
+    </g>
+    <g id="glint">
+      <path d="M50,2 L60,40 L98,50 L60,60 L50,98 L40,60 L2,50 L40,40 Z" fill="#fff"/>
+    </g>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <nav>
+    <a class="wordmark" href="#">SLOTCH</a>
+    <a class="gh" href="https://github.com/Spykoninho/SlotNotch">GitHub →</a>
+  </nav>
+
+  <header class="hero">
+    <h1>La machine à sous cachée <em>dans le notch</em>.</h1>
+    <p class="lead">Approche ton curseur de l'encoche : un bandit manchot descend de la caméra,
+    te débite un faux crédit et te nargue en français. Tout est dessiné à la main en Core Animation.</p>
     <div class="cta">
-      <!-- Remplacer par le lien GitHub Releases après la première release -->
-      <a class="btn" href="https://github.com/REMPLACER_USER/slotch/releases/latest">Télécharger pour macOS</a>
-      <code class="brew">brew install --cask REMPLACER_USER/tap/slotch</code>
+      <a class="btn" href="https://github.com/Spykoninho/SlotNotch/releases/latest">Télécharger pour macOS</a>
+      <code class="brew" id="brew" title="Cliquer pour copier">brew install --cask spykoninho/tap/slotch</code>
     </div>
-    <img class="hero" src="assets/hero.png" alt="Slotch déplié sous le notch : triple cerises, ticker LED, levier chromé">
+    <p class="meta">Gratuit · Open source · macOS 12+ · aucun vrai argent, promis</p>
   </header>
 
-  <hr class="rule">
+  <section class="demo">
+    <div class="macwrap"><div class="mac" id="mac">
+      <div class="screen" id="screen">
+        <div class="menubar">
+          <div class="l"><b></b><b>Slotch</b><span>Fichier</span><span>Édition</span><span>Aide</span></div>
+          <div class="r"><span>⏻</span><span id="clock">11:11</span></div>
+        </div>
+        <div class="pill" id="pill">
+          <div class="pill-body" id="pillbody">
+            <div class="face"></div>
+            <div class="coinslot"></div>
+            <div class="plaque">· SLOTCH ·</div>
+            <div class="jewel" id="jewel"><i></i></div>
+            <div class="reels" id="reels"></div>
+            <div class="bottomrow">
+              <div class="ticker" id="ticker"><span id="tickertext"></span></div>
+              <div class="credits"><small>CR</small><b id="creditsval">020</b></div>
+            </div>
+          </div>
+          <div class="lever" id="lever"><div class="bracket"></div><div class="arm"></div></div>
+        </div>
+        <div class="notch" id="notch" title="Le notch"></div>
+        <div class="fx" id="fx"></div>
+      </div>
+    </div></div>
+    <p class="hint" id="hint"><b>Essaie ici</b> — approche ton curseur du notch, puis clique sur la machine.</p>
+  </section>
 
-  <section class="cards">
-    <div class="card">
-      <h3>Dessiné à la main</h3>
-      <p>Cadre laiton riveté, rouleaux ivoire sous verre bombé, ticker LED 5×7,
-      compteur 7 segments. Chaque symbole est tracé en Core Graphics —
-      zéro emoji, zéro image importée.</p>
-    </div>
-    <div class="card">
-      <h3>Il a du caractère</h3>
-      <p>Il te nargue en français ou en anglais, offre le premier tirage, truque
-      des near-miss pour le drame, et craque avant toi si la chance t'abandonne
-      trop longtemps.</p>
-    </div>
-    <div class="card">
-      <h3>Des crédits, pour de faux</h3>
-      <p>20 crédits offerts, −1 par tirage, +77 le jackpot. Fauché ? La maison
-      régale. Aucun vrai argent, aucune pub, aucun compte — juste ta pause café.</p>
+  <section class="block">
+    <p class="overline">Fait main</p>
+    <div class="cols">
+      <div class="col">
+        <h3>Zéro emoji, zéro asset importé</h3>
+        <p>Cerises, sept, cloche, BAR, diamant, fer à cheval : chaque symbole est tracé
+        en vectoriel, comme le cadre laiton, le ticker LED 5×7 et le compteur 7 segments.</p>
+      </div>
+      <div class="col">
+        <h3>Il a du caractère</h3>
+        <p>Premier tirage offert, near-miss truqués pour le drame, pitié intégrée quand la
+        chance t'abandonne. Il parle français et anglais, au choix.</p>
+      </div>
+      <div class="col">
+        <h3>Discret comme un vice</h3>
+        <p>Pas d'icône Dock, pas de vol de focus, aucune permission système. La machine
+        n'existe que quand ton curseur va la chercher.</p>
+      </div>
     </div>
   </section>
 
-  <hr class="rule">
-
-  <section>
-    <h2>LES COMBINAISONS</h2>
-    <table>
-      <tr><td>7 · 7 · 7</td><td>Jackpot — explosion dorée, pluie de pièces, lettres de marquise</td></tr>
-      <tr><td>CERISES ×3</td><td>Pluie de cerises sur tout l'écran</td></tr>
-      <tr><td>CLOCHE ×3</td><td>Ding ding ding — ondes dorées et carillon</td></tr>
-      <tr><td>BAR ×3</td><td>Pluie de lingots, lourde comme il se doit</td></tr>
-      <tr><td>DIAMANT ×3</td><td>Scintillements et rai de lumière</td></tr>
-      <tr><td>FER ×3</td><td>La veine verte</td></tr>
-      <tr><td>7 · 7 · ✗</td><td>Near-miss. Flash rouge. Douleur.</td></tr>
-    </table>
+  <section class="block">
+    <p class="overline">Les combinaisons</p>
+    <div class="combos">
+      <div class="combo"><svg><use href="#sym1"/></svg><span class="k">7 · 7 · 7</span><span class="v">Jackpot — pluie de pièces, lettres d'or, +77 crédits</span></div>
+      <div class="combo"><svg><use href="#sym0"/></svg><span class="k">Cerises ×3</span><span class="v">Pluie de cerises sur tout l'écran</span></div>
+      <div class="combo"><svg><use href="#sym2"/></svg><span class="k">Cloche ×3</span><span class="v">Ding ding ding — ondes dorées et carillon</span></div>
+      <div class="combo"><svg><use href="#sym3"/></svg><span class="k">BAR ×3</span><span class="v">Pluie de lingots, lourde comme il se doit</span></div>
+      <div class="combo"><svg><use href="#sym4"/></svg><span class="k">Diamant ×3</span><span class="v">Scintillements et rai de lumière</span></div>
+      <div class="combo"><svg><use href="#sym5"/></svg><span class="k">Fer ×3</span><span class="v">La veine verte</span></div>
+      <div class="combo"><svg><use href="#glint"/></svg><span class="k">7 · 7 · ✗</span><span class="v">Near-miss. Flash rouge. Douleur.</span></div>
+    </div>
   </section>
 
   <footer>
-    <p>Fait à la main en Swift, AppKit et Core Animation — sans Xcode.<br>
-    <a href="https://github.com/REMPLACER_USER/slotch">Code source sur GitHub</a> ·
-    macOS 12+ · le notch est optionnel, l'addiction aussi</p>
+    <span>Fait main en Swift, AppKit &amp; Core Animation — sans Xcode.</span>
+    <span><a href="https://github.com/Spykoninho/SlotNotch">Code source</a> · macOS 12+ · le notch est optionnel, l'addiction aussi</span>
   </footer>
-
 </div>
+
+<script>
+(() => {
+  // ---------- construction des rouleaux ----------
+  const CELL = 56, SYMS = 6, REPEATS = 5;
+  const reelsEl = document.getElementById('reels');
+  const strips = [], shown = [6, 7, 8];
+  for (let r = 0; r < 3; r++) {
+    const reel = document.createElement('div'); reel.className = 'reel';
+    const strip = document.createElement('div'); strip.className = 'strip';
+    for (let c = 0; c < SYMS * REPEATS; c++) {
+      const cell = document.createElement('div'); cell.className = 'cell';
+      cell.innerHTML = `<svg viewBox="0 0 100 100"><use href="#sym${c % SYMS}"/></svg>`;
+      strip.appendChild(cell);
+    }
+    reel.appendChild(strip); reelsEl.appendChild(reel); strips.push(strip);
+    strip.style.transform = `translateY(${-shown[r] * CELL}px)`;
+  }
+
+  // ---------- état ----------
+  const $ = id => document.getElementById(id);
+  const pill = $('pill'), jewel = $('jewel'), lever = $('lever'), fx = $('fx'),
+        screen = $('screen'), ticker = $('ticker'), tickertext = $('tickertext');
+  let credits = +(localStorage.getItem('cr') ?? 20);
+  let hasSpun = localStorage.getItem('spun') === '1';
+  let sinceTriple = +(localStorage.getItem('st') ?? 0);
+  let spinning = false, holdUntil = 0, out = false, hideTimer = null;
+
+  const save = () => { localStorage.setItem('cr', credits); localStorage.setItem('spun', hasSpun ? '1' : '0'); localStorage.setItem('st', sinceTriple); };
+  const setCredits = () => $('creditsval').textContent = String(Math.max(0, credits)).padStart(3, '0');
+  setCredits();
+
+  // ---------- ticker ----------
+  function say(msg, tone = '') {
+    ticker.className = 'ticker ' + tone;
+    tickertext.style.animation = 'none';
+    tickertext.textContent = msg;
+    requestAnimationFrame(() => {
+      const over = tickertext.scrollWidth - ticker.clientWidth;
+      if (over > 4) {
+        const dist = tickertext.scrollWidth + ticker.clientWidth;
+        tickertext.style.setProperty('--tw', tickertext.scrollWidth + 'px');
+        tickertext.animate(
+          [{ transform: `translateY(-50%) translateX(${ticker.clientWidth}px)` },
+           { transform: `translateY(-50%) translateX(-${tickertext.scrollWidth}px)` }],
+          { duration: dist * 22, iterations: Infinity });
+      } else {
+        tickertext.getAnimations().forEach(a => a.cancel());
+        tickertext.style.left = Math.max(0, (ticker.clientWidth - tickertext.scrollWidth) / 2) + 'px';
+        return;
+      }
+      tickertext.style.left = '0px';
+    });
+  }
+
+  const GREET = ["Un p'tit tour ?", "Clique. Tu sais que tu en as envie.", "Slotch t'attendait.", "Pssst. Par ici.", "Tire sur le levier, on verra bien."];
+  const LOSE = ["Encore un p'tit tour ?", "La chance tourne. Pas pour toi.", "C'était presque bien.", "Statistiquement, ça devait arriver.", "Même la pomme a plus de chance."];
+  const NEAR = ["NON MAIS SI PRÈS ?!", "Le troisième 7 est en RTT.", "Deux 7. Le destin est cruel."];
+  const PAIR = ["Presque ! Enfin… presque presque.", "Deux sur trois. Comme au loto. Non.", "Ça chauffe. Tiède, disons."];
+  const TRIPLE = { 0: "PLUIE DE CERISES !", 2: "DING DING DING !", 3: "TRIPLE BAR. Le grand classique.", 4: "DIAMANTS. Quelle classe.", 5: "FER À CHEVAL. Veinard, va." };
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+
+  // ---------- apparition ----------
+  function show() {
+    if (out) return; out = true;
+    pill.classList.add('out');
+    say(pick(GREET));
+    chase(1);
+  }
+  function hide() {
+    if (!out || spinning || Date.now() < holdUntil) return;
+    out = false; pill.classList.remove('out');
+  }
+  screen.addEventListener('mousemove', e => {
+    const b = screen.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
+    const nearNotch = y < 34 && Math.abs(x - b.width / 2) < 110;
+    const nearPill = y < 180 && Math.abs(x - b.width / 2) < 220;
+    if (nearNotch) show();
+    clearTimeout(hideTimer);
+    if (out && !nearPill) hideTimer = setTimeout(hide, 500);
+  });
+  screen.addEventListener('mouseleave', () => { clearTimeout(hideTimer); hideTimer = setTimeout(hide, 400); });
+  $('notch').addEventListener('click', () => out ? hide() : show());
+  $('pillbody').addEventListener('click', spin);
+
+  // ---------- ampoules ----------
+  const bulbs = [];
+  [[14, 58], [14, 82], [14, 106], [318, 58], [318, 82], [318, 106]].forEach(([x, y]) => {
+    const b = document.createElement('div'); b.className = 'bulb';
+    b.style.left = x + 'px'; b.style.top = y + 'px';
+    $('pillbody').appendChild(b); bulbs.push(b);
+  });
+  function chase(rounds) {
+    const order = [0, 1, 2, 5, 4, 3];
+    for (let k = 0; k < rounds * 6; k++) {
+      const b = bulbs[order[k % 6]];
+      setTimeout(() => b.classList.add('lit'), k * 90);
+      setTimeout(() => b.classList.remove('lit'), k * 90 + 240);
+    }
+  }
+  function frenzy(ms) {
+    const t0 = Date.now();
+    const iv = setInterval(() => {
+      bulbs.forEach(b => b.classList.toggle('lit', Math.random() > 0.4));
+      if (Date.now() - t0 > ms) { clearInterval(iv); bulbs.forEach(b => b.classList.remove('lit')); }
+    }, 90);
+  }
+
+  // ---------- sons (discrets) ----------
+  let actx;
+  function beep(freq, dur = 0.05, gain = 0.04, type = 'square') {
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(gain, actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+      o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime + dur);
+    } catch (e) {}
+  }
+
+  // ---------- moteur (portage du Swift) ----------
+  function draw() {
+    if (!hasSpun) { hasSpun = true; return { reels: [0, 0, 0], out: 'triple', s: 0, msg: "Cadeau de la maison. Reviens quand tu veux." }; }
+    if (sinceTriple >= 10) {
+      const s = Math.random() < 0.15 ? 1 : 2 + Math.floor(Math.random() * 4);
+      return { reels: [s, s, s], out: s === 1 ? 'jackpot' : 'triple', s, msg: "Bon. Tiens. Tu me faisais de la peine." };
+    }
+    const roll = Math.random();
+    if (roll < 0.015) return { reels: [1, 1, 1], out: 'jackpot', s: 1, msg: "JACKPOT. Encadre cet écran." };
+    if (roll < 0.115) { const s = pick([0, 2, 3, 4, 5]); return { reels: [s, s, s], out: 'triple', s, msg: TRIPLE[s] }; }
+    if (roll < 0.40) {
+      const s = pick([0, 2, 3, 4, 5]); let o = Math.floor(Math.random() * 6);
+      while (o === s) o = Math.floor(Math.random() * 6);
+      const reels = [s, s, s]; reels[Math.floor(Math.random() * 3)] = o;
+      return { reels, out: 'pair', s, msg: pick(PAIR) };
+    }
+    if (Math.random() < 0.25) {
+      let x = Math.floor(Math.random() * 6); while (x === 1) x = Math.floor(Math.random() * 6);
+      return { reels: [1, 1, x], out: 'near', msg: pick(NEAR) };
+    }
+    const pool = [0, 1, 2, 3, 4, 5].sort(() => Math.random() - 0.5);
+    return { reels: pool.slice(0, 3), out: 'lose', msg: pick(LOSE) };
+  }
+
+  function spin() {
+    if (spinning) return;
+    spinning = true;
+    credits -= 1; setCredits();
+    jewel.className = 'jewel spin';
+    say(pick(["…", "ça tourne…", "croise les doigts…"]));
+    lever.classList.add('pulled');
+    setTimeout(() => lever.classList.remove('pulled'), 380);
+    beep(300, 0.06, 0.03);
+
+    const r = draw();
+    const durs = [1.1, 1.5, 1.9];
+    for (let i = 0; i < 3; i++) {
+      const jump = (shown[i] % SYMS) + 18;
+      const target = r.reels[i] + 6;
+      const strip = strips[i];
+      strip.style.transition = 'none';
+      strip.style.transform = `translateY(${-jump * CELL}px)`;
+      void strip.offsetHeight;
+      strip.style.transition = `transform ${durs[i]}s cubic-bezier(0.18, 0.7, 0.25, 1)`;
+      strip.style.transform = `translateY(${-target * CELL}px)`;
+      shown[i] = target;
+      setTimeout(() => beep(1900, 0.03, 0.05), durs[i] * 1000);
+    }
+    setTimeout(() => resolve(r), durs[2] * 1000 + 180);
+  }
+
+  function resolve(r) {
+    spinning = false;
+    holdUntil = Date.now() + 2600;
+    if (r.out === 'triple' || r.out === 'jackpot') sinceTriple = 0; else sinceTriple++;
+
+    if (r.out === 'jackpot') {
+      credits += 77; jewel.className = 'jewel win';
+      say(r.msg, 'gold'); flash('gold'); bigwin('JACKPOT'); frenzy(3600);
+      rain('coin', 34); rain('glint', 16);
+      [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, 0.25, 0.05, 'triangle'), i * 130));
+      holdUntil = Date.now() + 4500;
+    } else if (r.out === 'triple') {
+      credits += 12; jewel.className = 'jewel win';
+      say(r.msg, 'gold'); chase(4);
+      const map = { 0: 'sym0', 2: 'sym2', 3: 'sym3', 4: 'sym4', 5: 'sym5' };
+      bigwin({ 0: 'CERISES', 2: 'DING DING DING', 3: 'BAR BAR BAR', 4: 'DIAMANTS', 5: 'VEINARD' }[r.s] || 'TRIPLE');
+      rain(map[r.s] || 'coin', 26);
+      [659, 880].forEach((f, i) => setTimeout(() => beep(f, 0.2, 0.045, 'triangle'), i * 140));
+      holdUntil = Date.now() + 3500;
+    } else if (r.out === 'pair') {
+      credits += 2; jewel.className = 'jewel win';
+      say(r.msg); chase(1); rain('glint', 8);
+      beep(740, 0.12, 0.035, 'triangle');
+    } else if (r.out === 'near') {
+      jewel.className = 'jewel lose';
+      say(r.msg, 'red'); flash('red');
+      beep(140, 0.3, 0.05, 'sawtooth');
+    } else {
+      jewel.className = 'jewel lose';
+      say(r.msg);
+    }
+    if (credits <= 0 && (r.out === 'lose' || r.out === 'near')) {
+      credits = 10; say('La maison régale : +10 crédits.', 'gold');
+    }
+    setCredits(); save();
+  }
+
+  // ---------- effets ----------
+  function flash(kind) {
+    const f = document.createElement('div'); f.className = 'flash ' + kind;
+    screen.appendChild(f); f.addEventListener('animationend', () => f.remove());
+  }
+  function bigwin(txt) {
+    const d = document.createElement('div'); d.className = 'bigwin'; d.textContent = txt;
+    screen.appendChild(d); d.addEventListener('animationend', () => d.remove());
+  }
+  function rain(sym, n) {
+    for (let i = 0; i < n; i++) {
+      const s = 22 + Math.random() * 26;
+      const d = document.createElement('div'); d.className = 'drop';
+      d.innerHTML = `<svg width="${s}" height="${s}" viewBox="0 0 100 100"><use href="#${sym}"/></svg>`;
+      d.style.left = Math.random() * 100 + '%';
+      d.style.setProperty('--dx', (Math.random() * 80 - 40) + 'px');
+      d.style.setProperty('--rot', (Math.random() * 500 - 250) + 'deg');
+      d.style.animationDuration = (1.6 + Math.random() * 1.6) + 's';
+      d.style.animationDelay = (Math.random() * 0.9) + 's';
+      fx.appendChild(d); d.addEventListener('animationend', () => d.remove());
+    }
+  }
+
+  // ---------- divers ----------
+  const clk = () => $('clock').textContent =
+    new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  clk(); setInterval(clk, 20000);
+
+  $('brew').addEventListener('click', () => {
+    navigator.clipboard?.writeText('brew install --cask spykoninho/tap/slotch');
+    $('brew').textContent = 'copié ✓';
+    setTimeout(() => $('brew').textContent = 'brew install --cask spykoninho/tap/slotch', 1400);
+  });
+
+  // échelle responsive de l'écran
+  function fit() {
+    const scale = Math.min(1, (window.innerWidth - 40) / 736);
+    $('mac').style.transform = `scale(${scale})`;
+    $('mac').parentElement.style.height = 450 * scale + 20 + 'px';
+  }
+  fit(); addEventListener('resize', fit);
+
+  // coucou d'accueil sur mobile / au chargement
+  if (matchMedia('(hover: none)').matches) $('hint').innerHTML = '<b>Essaie ici</b> — touche le notch, puis la machine.';
+})();
+</script>
 </body>
 </html>
