@@ -45,9 +45,31 @@ xcrun stapler staple "$DMG"
 rm -rf dist/dmg /tmp/Slotch-notarize.zip
 
 SHA=$(shasum -a 256 "$DMG" | awk '{print $1}')
+
+# Mise à jour automatique du tap Homebrew
+TAP_URL="https://github.com/Spykoninho/homebrew-tap.git"
+TAP_TMP=$(mktemp -d)
+if git clone -q --depth 1 "$TAP_URL" "$TAP_TMP" 2>/dev/null; then
+  sed -i '' -E "s/version \"[^\"]+\"/version \"$VERSION\"/; s/sha256 \"[^\"]+\"/sha256 \"$SHA\"/" \
+    "$TAP_TMP/Casks/slotch.rb"
+  if git -C "$TAP_TMP" diff --quiet; then
+    echo "🍺 Tap Homebrew déjà à jour."
+  elif git -C "$TAP_TMP" commit -aqm "slotch $VERSION" && git -C "$TAP_TMP" push -q origin HEAD; then
+    echo "🍺 Tap Homebrew mis à jour : slotch $VERSION ($SHA)"
+  else
+    echo "⚠️  Push du tap impossible — reporte à la main dans Casks/slotch.rb :"
+    echo "    version \"$VERSION\" · sha256 \"$SHA\""
+  fi
+  rm -rf "$TAP_TMP"
+else
+  echo "⚠️  Clone du tap impossible — reporte à la main : version \"$VERSION\" · sha256 \"$SHA\""
+fi
+
+# Copie de référence dans le repo principal (à committer avec la release)
+sed -i '' -E "s/version \"[^\"]+\"/version \"$VERSION\"/; s/sha256 \"[^\"]+\"/sha256 \"$SHA\"/" \
+  packaging/homebrew/slotch.rb
+
 echo ""
-echo "✅ $DMG — prêt pour GitHub Releases."
-echo ""
-echo "📦 Pour le cask Homebrew (packaging/homebrew/slotch.rb) :"
-echo "   version \"$VERSION\""
-echo "   sha256 \"$SHA\""
+echo "✅ $DMG"
+echo "➡️  Publie EXACTEMENT ce fichier dans une Release GitHub, tag $VERSION (sans « v »)."
+echo "    Si tu relances ce script, le sha change : le tap suit toujours le DERNIER DMG produit."
