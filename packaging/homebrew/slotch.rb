@@ -12,7 +12,7 @@ cask "slotch" do
   desc "Slot machine hiding behind your Mac's notch"
   homepage "https://github.com/Spykoninho/SlotNotch"
 
-  depends_on macos: ">= :monterey"
+  depends_on macos: :monterey
 
   app "Slotch.app"
 
