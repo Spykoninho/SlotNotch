@@ -1,8 +1,6 @@
 # 🎰 Slotch
 
-> *Le Bandit à Encoche.*
-
-Il vit derrière le notch de ton Mac. Il attend. Il te nargue.
+Il vit derrière le notch de ton Mac. 
 
 Approche ton curseur de l'encoche : un cabinet de machine à sous glisse hors du
 notch, façon Dynamic Island. Cadre laiton riveté, façade bordeaux feutrée,
@@ -93,5 +91,3 @@ tools/                     # générateur d'icône
 docs/                      # la page vitrine (GitHub Pages)
 packaging/homebrew/        # le cask, prêt à copier dans un tap
 ```
-
-*Aucune productivité n'a été épargnée pendant le développement de cette application.*
