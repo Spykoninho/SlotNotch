@@ -48,10 +48,10 @@ enum Personality {
     static func triple(_ s: Int) -> String {
         switch s {
         case 0: return "PLUIE DE CERISES !"
-        case 2: return "La nuit tombe sur ton écran…"
-        case 3: return "ORAGE. Planque ton curseur."
-        case 4: return "BOUH."
-        case 5: return "Tout fond. Même ta productivité."
+        case 2: return "DING DING DING !"
+        case 3: return "TRIPLE BAR. Le grand classique."
+        case 4: return "DIAMANTS. Quelle classe."
+        case 5: return "FER À CHEVAL. Veinard, va."
         default: return "TRIPLETTE ! L'encoche est fière."
         }
     }

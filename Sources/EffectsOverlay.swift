@@ -19,10 +19,10 @@ enum EffectsOverlay {
         case .triple(let s):
             switch s {
             case 0: cherries(screen)
-            case 2: night(screen)
-            case 3: storm(screen)
-            case 4: ghost(screen)
-            case 5: melt(screen)
+            case 2: bells(screen)
+            case 3: bars(screen)
+            case 4: diamonds(screen)
+            case 5: horseshoes(screen)
             default: jackpot(screen)
             }
         }
@@ -51,22 +51,20 @@ enum EffectsOverlay {
         return v.layer!
     }
 
+    // Bannière en lettrage doré biseauté, dessiné maison
     private static func banner(_ text: String, in root: CALayer, size: CGFloat,
-                               color: NSColor, delay: Double = 0.1, hold: Double = 2.2) {
-        let t = CATextLayer()
-        t.string = NSAttributedString(string: text, attributes: [
-            .font: NSFont.systemFont(ofSize: size, weight: .black),
-            .foregroundColor: color,
-        ])
-        t.alignmentMode = .center
-        t.contentsScale = 2
-        t.frame = CGRect(x: 0, y: root.bounds.midY - size * 0.7,
-                         width: root.bounds.width, height: size * 1.5)
+                               delay: Double = 0.1, hold: Double = 2.2) {
+        guard let img = CasinoArt.goldText(text, fontSize: size) else { return }
+        let pt = CasinoArt.goldTextSize(text, fontSize: size)
+        let t = CALayer()
+        t.contents = img
+        t.bounds = CGRect(origin: .zero, size: pt)
+        t.position = CGPoint(x: root.bounds.midX, y: root.bounds.midY)
         t.opacity = 0
         t.shadowColor = NSColor.black.cgColor
-        t.shadowOpacity = 0.6
-        t.shadowRadius = 12
-        t.shadowOffset = .zero
+        t.shadowOpacity = 0.55
+        t.shadowRadius = 14
+        t.shadowOffset = CGSize(width: 0, height: -6)
         root.addSublayer(t)
 
         let pop = CASpringAnimation(keyPath: "transform.scale")
@@ -87,10 +85,10 @@ enum EffectsOverlay {
         t.add(fade, forKey: "fade")
     }
 
-    private static func emojiCell(_ emoji: String, size: CGFloat) -> CAEmitterCell {
+    private static func assetCell(_ img: CGImage?, lifetime: Float = 7) -> CAEmitterCell {
         let c = CAEmitterCell()
-        c.contents = EmojiArt.image(emoji, size: size)
-        c.lifetime = 7
+        c.contents = img
+        c.lifetime = lifetime
         return c
     }
 
@@ -111,7 +109,7 @@ enum EffectsOverlay {
 
     private static func cherries(_ screen: NSScreen) {
         let root = makeWindow(screen, lifetime: 8)
-        let c = emojiCell("🍒", size: 56)
+        let c = assetCell(CasinoArt.symbol(0, size: 56))
         c.birthRate = 16
         c.velocity = -60
         c.velocityRange = 40
@@ -138,13 +136,13 @@ enum EffectsOverlay {
         fk.duration = 0.9
         flash.add(fk, forKey: "flash")
 
-        // Explosion centrale
+        // Explosion centrale : pièces, éclats, lingots
         let boom = CAEmitterLayer()
         boom.emitterPosition = CGPoint(x: root.bounds.midX, y: root.bounds.midY)
         boom.emitterShape = .point
         var cells: [CAEmitterCell] = []
-        for e in ["🪙", "✨", "💰", "🎉"] {
-            let c = emojiCell(e, size: 46)
+        for img in [CasinoArt.coin(46), CasinoArt.glint(38), CasinoArt.ingot(46)] {
+            let c = assetCell(img)
             c.birthRate = 30
             c.velocity = 480
             c.velocityRange = 220
@@ -160,8 +158,8 @@ enum EffectsOverlay {
         // Confettis colorés
         for hue in stride(from: 0.0, to: 1.0, by: 0.2) {
             let c = CAEmitterCell()
-            c.contents = EmojiArt.colorRect(NSColor(calibratedHue: hue, saturation: 0.85, brightness: 1, alpha: 1),
-                                            size: NSSize(width: 10, height: 16))
+            c.contents = CasinoArt.colorRect(NSColor(calibratedHue: hue, saturation: 0.85, brightness: 1, alpha: 1),
+                                             size: NSSize(width: 10, height: 16))
             c.birthRate = 40
             c.lifetime = 6
             c.velocity = 420
@@ -178,7 +176,7 @@ enum EffectsOverlay {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) { boom.birthRate = 0 }
 
         // Pluie de pièces prolongée
-        let coin = emojiCell("🪙", size: 44)
+        let coin = assetCell(CasinoArt.coin(44))
         coin.birthRate = 14
         coin.velocity = -80
         coin.velocityRange = 60
@@ -189,210 +187,169 @@ enum EffectsOverlay {
         coin.spin = 3
         _ = rain(root, cells: [coin], birthDuration: 4)
 
-        banner("JACKPOT", in: root, size: 130,
-               color: NSColor(calibratedRed: 1, green: 0.83, blue: 0.25, alpha: 1), hold: 3)
+        banner("JACKPOT", in: root, size: 120, hold: 3)
     }
 
-    private static func night(_ screen: NSScreen) {
-        let root = makeWindow(screen, lifetime: 7.5)
-        let dark = CALayer()
-        dark.frame = root.bounds
-        dark.backgroundColor = NSColor(calibratedRed: 0.01, green: 0.015, blue: 0.09, alpha: 1).cgColor
-        dark.opacity = 0
-        root.addSublayer(dark)
-        let dim = CAKeyframeAnimation(keyPath: "opacity")
-        dim.values = [0, 0.62, 0.62, 0]
-        dim.keyTimes = [0, 0.18, 0.8, 1]
-        dim.duration = 7
-        dim.fillMode = .forwards
-        dim.isRemovedOnCompletion = false
-        dark.add(dim, forKey: "dim")
+    // Triple cloche : ondes sonores dorées + carillon
+    private static func bells(_ screen: NSScreen) {
+        let root = makeWindow(screen, lifetime: 7)
+        let center = CGPoint(x: root.bounds.midX, y: root.bounds.midY)
 
-        // Étoiles qui scintillent
-        let star = emojiCell("✦", size: 22)
-        star.contents = EmojiArt.image("✨", size: 26)
-        star.birthRate = 9
-        star.lifetime = 2.4
-        star.velocity = 6
-        star.emissionRange = .pi * 2
-        star.scale = 0.35
-        star.scaleRange = 0.35
-        star.alphaSpeed = -0.4
-        let sky = CAEmitterLayer()
-        sky.emitterPosition = CGPoint(x: root.bounds.midX, y: root.bounds.height * 0.66)
-        sky.emitterSize = CGSize(width: root.bounds.width, height: root.bounds.height * 0.6)
-        sky.emitterShape = .rectangle
-        sky.emitterCells = [star]
-        root.addSublayer(sky)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.2) { sky.birthRate = 0 }
+        for i in 0..<3 {
+            let ring = CAShapeLayer()
+            ring.path = CGPath(ellipseIn: CGRect(x: -70, y: -70, width: 140, height: 140), transform: nil)
+            ring.position = center
+            ring.fillColor = nil
+            ring.strokeColor = NSColor(calibratedRed: 1, green: 0.8, blue: 0.3, alpha: 1).cgColor
+            ring.lineWidth = 7
+            ring.opacity = 0
+            root.addSublayer(ring)
 
-        // La lune se lève
-        let moon = CALayer()
-        moon.contents = EmojiArt.image("🌙", size: 120)
-        moon.frame = CGRect(x: root.bounds.width * 0.72, y: -140, width: 130, height: 130)
-        root.addSublayer(moon)
-        let rise = CABasicAnimation(keyPath: "position.y")
-        rise.fromValue = -140
-        rise.toValue = root.bounds.height * 0.7
-        rise.duration = 4.5
-        rise.timingFunction = CAMediaTimingFunction(name: .easeOut)
-        rise.fillMode = .forwards
-        rise.isRemovedOnCompletion = false
-        moon.add(rise, forKey: "rise")
-        let moonFade = CABasicAnimation(keyPath: "opacity")
-        moonFade.fromValue = 1
-        moonFade.toValue = 0
-        moonFade.beginTime = CACurrentMediaTime() + 5.6
-        moonFade.duration = 1.2
-        moonFade.fillMode = .forwards
-        moonFade.isRemovedOnCompletion = false
-        moon.add(moonFade, forKey: "fade")
+            let t0 = CACurrentMediaTime() + Double(i) * 0.3
+            let grow = CABasicAnimation(keyPath: "transform.scale")
+            grow.fromValue = 0.25
+            grow.toValue = 7
+            grow.duration = 1.5
+            grow.beginTime = t0
+            grow.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            ring.add(grow, forKey: "grow")
 
-        banner("BONNE NUIT", in: root, size: 64,
-               color: NSColor(calibratedWhite: 0.9, alpha: 0.9), delay: 1.2, hold: 2.4)
-    }
+            let fade = CAKeyframeAnimation(keyPath: "opacity")
+            fade.values = [0, 0.9, 0]
+            fade.keyTimes = [0, 0.12, 1]
+            fade.duration = 1.5
+            fade.beginTime = t0
+            ring.add(fade, forKey: "fade")
 
-    private static func storm(_ screen: NSScreen) {
-        let root = makeWindow(screen, lifetime: 3.5)
-
-        // Flashs blancs
-        let flash = CALayer()
-        flash.frame = root.bounds
-        flash.backgroundColor = NSColor.white.cgColor
-        flash.opacity = 0
-        root.addSublayer(flash)
-        let fk = CAKeyframeAnimation(keyPath: "opacity")
-        fk.values = [0, 0.85, 0, 0, 0.6, 0, 0.35, 0]
-        fk.keyTimes = [0, 0.05, 0.12, 0.3, 0.36, 0.45, 0.5, 0.6]
-        fk.duration = 1.6
-        flash.add(fk, forKey: "flash")
-
-        // Barres de glitch néon
-        for _ in 0..<26 {
-            let bar = CALayer()
-            let h = CGFloat.random(in: 6...36)
-            bar.frame = CGRect(x: 0, y: CGFloat.random(in: 0...root.bounds.height - h),
-                               width: root.bounds.width, height: h)
-            bar.backgroundColor = NSColor(calibratedHue: CGFloat.random(in: 0...1),
-                                          saturation: 1, brightness: 1, alpha: 1).cgColor
-            bar.opacity = 0
-            bar.compositingFilter = "differenceBlendMode"
-            root.addSublayer(bar)
-            let blink = CAKeyframeAnimation(keyPath: "opacity")
-            blink.values = [0, 0.9, 0, 0.7, 0]
-            blink.duration = Double.random(in: 0.12...0.4)
-            blink.beginTime = CACurrentMediaTime() + Double.random(in: 0...1.4)
-            bar.add(blink, forKey: "blink")
+            SoundBox.play("Glass", volume: 0.55, after: Double(i) * 0.3)
         }
 
-        // Éclairs qui tombent
-        let bolt = emojiCell("⚡️", size: 60)
-        bolt.birthRate = 10
-        bolt.velocity = -500
-        bolt.velocityRange = 150
-        bolt.emissionLongitude = .pi / 2
-        bolt.scale = 0.8
-        bolt.scaleRange = 0.4
-        bolt.alphaSpeed = -0.5
-        _ = rain(root, cells: [bolt], birthDuration: 1.6)
+        let bell = assetCell(CasinoArt.symbol(2, size: 50))
+        bell.birthRate = 10
+        bell.velocity = -50
+        bell.velocityRange = 35
+        bell.emissionLongitude = .pi / 2
+        bell.yAcceleration = -220
+        bell.scale = 0.7
+        bell.scaleRange = 0.3
+        bell.spin = 1
+        bell.spinRange = 2
+        _ = rain(root, cells: [bell], birthDuration: 2.6)
+
+        banner("DING DING DING", in: root, size: 72, delay: 0.3, hold: 2)
     }
 
-    private static func ghost(_ screen: NSScreen) {
-        let root = makeWindow(screen, lifetime: 6)
+    // Triple BAR : la fortune tombe du ciel, lourde
+    private static func bars(_ screen: NSScreen) {
+        let root = makeWindow(screen, lifetime: 8)
+        let ingot = assetCell(CasinoArt.ingot(64))
+        ingot.birthRate = 14
+        ingot.velocity = -160
+        ingot.velocityRange = 80
+        ingot.emissionLongitude = .pi / 2
+        ingot.yAcceleration = -520
+        ingot.scale = 0.75
+        ingot.scaleRange = 0.35
+        ingot.spin = 0.6
+        ingot.spinRange = 1.4
+        _ = rain(root, cells: [ingot], birthDuration: 3)
 
-        // Voile bleuté spectral
+        let sym = assetCell(CasinoArt.symbol(3, size: 56))
+        sym.birthRate = 6
+        sym.velocity = -120
+        sym.velocityRange = 60
+        sym.emissionLongitude = .pi / 2
+        sym.yAcceleration = -420
+        sym.scale = 0.8
+        sym.scaleRange = 0.3
+        _ = rain(root, cells: [sym], birthDuration: 3)
+
+        banner("BAR BAR BAR", in: root, size: 84, delay: 0.2, hold: 2.2)
+    }
+
+    // Triple diamant : scintillements et balayage lumineux
+    private static func diamonds(_ screen: NSScreen) {
+        let root = makeWindow(screen, lifetime: 6.5)
+
+        for _ in 0..<26 {
+            let g = CALayer()
+            let s = CGFloat.random(in: 18...52)
+            g.contents = CasinoArt.glint(40)
+            g.frame = CGRect(x: CGFloat.random(in: 0...root.bounds.width - s),
+                             y: CGFloat.random(in: 0...root.bounds.height - s),
+                             width: s, height: s)
+            g.opacity = 0
+            root.addSublayer(g)
+
+            let t0 = CACurrentMediaTime() + Double.random(in: 0...3)
+            let dur = Double.random(in: 0.7...1.4)
+            let twinkle = CAKeyframeAnimation(keyPath: "opacity")
+            twinkle.values = [0, 1, 0]
+            twinkle.duration = dur
+            twinkle.beginTime = t0
+            g.add(twinkle, forKey: "twinkle")
+            let scale = CAKeyframeAnimation(keyPath: "transform.scale")
+            scale.values = [0.3, 1.1, 0.3]
+            scale.duration = dur
+            scale.beginTime = t0
+            g.add(scale, forKey: "scale")
+            let turn = CABasicAnimation(keyPath: "transform.rotation.z")
+            turn.fromValue = 0
+            turn.toValue = CGFloat.random(in: -0.9...0.9)
+            turn.duration = dur
+            turn.beginTime = t0
+            g.add(turn, forKey: "turn")
+        }
+
+        // Rai de lumière qui traverse l'écran
+        let ray = CAGradientLayer()
+        ray.frame = CGRect(x: 0, y: 0, width: 160, height: root.bounds.height * 1.6)
+        ray.colors = [NSColor.clear.cgColor,
+                      NSColor(calibratedWhite: 1, alpha: 0.30).cgColor,
+                      NSColor.clear.cgColor]
+        ray.startPoint = CGPoint(x: 0, y: 0.5)
+        ray.endPoint = CGPoint(x: 1, y: 0.5)
+        ray.position = CGPoint(x: -200, y: root.bounds.midY)
+        ray.transform = CATransform3DMakeRotation(0.32, 0, 0, 1)
+        root.addSublayer(ray)
+        let sweep = CABasicAnimation(keyPath: "position.x")
+        sweep.fromValue = -200
+        sweep.toValue = root.bounds.width + 200
+        sweep.duration = 1.6
+        sweep.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        ray.add(sweep, forKey: "sweep")
+
+        banner("DIAMANTS", in: root, size: 84, delay: 0.5, hold: 1.8)
+    }
+
+    // Triple fer à cheval : la veine verte
+    private static func horseshoes(_ screen: NSScreen) {
+        let root = makeWindow(screen, lifetime: 8)
+
         let tint = CALayer()
         tint.frame = root.bounds
-        tint.backgroundColor = NSColor(calibratedRed: 0.3, green: 0.5, blue: 1, alpha: 1).cgColor
+        tint.backgroundColor = NSColor(calibratedRed: 0.10, green: 0.65, blue: 0.25, alpha: 1).cgColor
         tint.opacity = 0
         root.addSublayer(tint)
         let tk = CAKeyframeAnimation(keyPath: "opacity")
-        tk.values = [0, 0.14, 0.14, 0]
-        tk.keyTimes = [0, 0.15, 0.8, 1]
-        tk.duration = 5
+        tk.values = [0, 0.16, 0.16, 0]
+        tk.keyTimes = [0, 0.15, 0.7, 1]
+        tk.duration = 3.5
         tint.add(tk, forKey: "tint")
 
-        // Le fantôme traverse en ondulant
-        let g = CALayer()
-        g.contents = EmojiArt.image("👻", size: 150)
-        g.frame = CGRect(x: -170, y: root.bounds.midY, width: 160, height: 160)
-        root.addSublayer(g)
-        let path = CAKeyframeAnimation(keyPath: "position")
-        var pts: [CGPoint] = []
-        let n = 40
-        for i in 0...n {
-            let t = CGFloat(i) / CGFloat(n)
-            let x = -170 + t * (root.bounds.width + 340)
-            let y = root.bounds.midY + sin(t * .pi * 4) * 90
-            pts.append(CGPoint(x: x, y: y))
-        }
-        path.values = pts.map { NSValue(point: $0) }
-        path.duration = 4.5
-        path.calculationMode = .cubic
-        path.fillMode = .forwards
-        path.isRemovedOnCompletion = false
-        g.add(path, forKey: "float")
+        let shoe = assetCell(CasinoArt.symbol(5, size: 56))
+        shoe.birthRate = 12
+        shoe.velocity = -70
+        shoe.velocityRange = 50
+        shoe.emissionLongitude = .pi / 2
+        shoe.yAcceleration = -260
+        shoe.scale = 0.75
+        shoe.scaleRange = 0.35
+        shoe.spin = 2
+        shoe.spinRange = 3
+        _ = rain(root, cells: [shoe], birthDuration: 3)
 
-        // Traînée de mini-fantômes
-        let trail = emojiCell("👻", size: 30)
-        trail.birthRate = 8
-        trail.lifetime = 1.2
-        trail.velocity = 20
-        trail.emissionRange = .pi * 2
-        trail.scale = 0.5
-        trail.alphaSpeed = -0.85
-        let te = CAEmitterLayer()
-        te.emitterShape = .point
-        te.emitterPosition = pts[0]
-        te.emitterCells = [trail]
-        root.addSublayer(te)
-        // La traînée suit le même chemin
-        let tp = CAKeyframeAnimation(keyPath: "emitterPosition")
-        tp.values = pts.map { NSValue(point: $0) }
-        tp.duration = 4.5
-        tp.calculationMode = .cubic
-        te.add(tp, forKey: "follow")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.5) { te.birthRate = 0 }
-
-        banner("BOUH", in: root, size: 90,
-               color: NSColor(calibratedWhite: 0.95, alpha: 0.95), delay: 1.6, hold: 1.2)
-    }
-
-    private static func melt(_ screen: NSScreen) {
-        let root = makeWindow(screen, lifetime: 6)
-        let count = 16
-        let w = root.bounds.width / CGFloat(count)
-        for i in 0..<count {
-            let drip = CALayer()
-            drip.backgroundColor = NSColor(calibratedHue: CGFloat.random(in: 0...1),
-                                           saturation: 0.55, brightness: 0.98, alpha: 0.85).cgColor
-            drip.anchorPoint = CGPoint(x: 0.5, y: 1)
-            drip.position = CGPoint(x: (CGFloat(i) + 0.5) * w, y: root.bounds.height)
-            drip.bounds = CGRect(x: 0, y: 0, width: w * 0.72, height: 0)
-            drip.cornerRadius = w * 0.36
-            root.addSublayer(drip)
-
-            let grow = CABasicAnimation(keyPath: "bounds.size.height")
-            grow.fromValue = 0
-            grow.toValue = CGFloat.random(in: root.bounds.height * 0.25...root.bounds.height * 0.75)
-            grow.duration = Double.random(in: 1.8...3.2)
-            grow.beginTime = CACurrentMediaTime() + Double.random(in: 0...0.7)
-            grow.timingFunction = CAMediaTimingFunction(name: .easeIn)
-            grow.fillMode = .forwards
-            grow.isRemovedOnCompletion = false
-            drip.add(grow, forKey: "grow")
-
-            let fade = CABasicAnimation(keyPath: "opacity")
-            fade.fromValue = 1
-            fade.toValue = 0
-            fade.beginTime = CACurrentMediaTime() + 4.2
-            fade.duration = 1.2
-            fade.fillMode = .forwards
-            fade.isRemovedOnCompletion = false
-            drip.add(fade, forKey: "fade")
-        }
-        banner("ÇA FOND", in: root, size: 70,
-               color: NSColor(calibratedWhite: 1, alpha: 0.9), delay: 1.4, hold: 1.6)
+        banner("VEINARD", in: root, size: 90, delay: 0.3, hold: 2)
     }
 
     private static func nearMiss(_ screen: NSScreen) {
@@ -410,10 +367,10 @@ enum EffectsOverlay {
 
     private static func tumbleweed(_ screen: NSScreen) {
         let root = makeWindow(screen, lifetime: 7)
-        let leaf = CALayer()
-        leaf.contents = EmojiArt.image("🍂", size: 50)
-        leaf.frame = CGRect(x: -60, y: 90, width: 50, height: 50)
-        root.addSublayer(leaf)
+        let weed = CALayer()
+        weed.contents = CasinoArt.tumbleweed(50)
+        weed.frame = CGRect(x: -60, y: 90, width: 50, height: 50)
+        root.addSublayer(weed)
 
         let roll = CAKeyframeAnimation(keyPath: "position")
         var pts: [CGPoint] = []
@@ -429,12 +386,12 @@ enum EffectsOverlay {
         roll.calculationMode = .cubic
         roll.fillMode = .forwards
         roll.isRemovedOnCompletion = false
-        leaf.add(roll, forKey: "roll")
+        weed.add(roll, forKey: "roll")
 
         let spin = CABasicAnimation(keyPath: "transform.rotation.z")
         spin.fromValue = 0
         spin.toValue = -Double.pi * 10
         spin.duration = 6.5
-        leaf.add(spin, forKey: "spin")
+        weed.add(spin, forKey: "spin")
     }
 }
