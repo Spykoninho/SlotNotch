@@ -1,3 +1,5 @@
 Slotch.app/
 BanditEncoche.app/
 .DS_Store
+dist/
+Resources/AppIcon.iconset/

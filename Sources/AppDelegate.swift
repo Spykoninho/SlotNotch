@@ -1,9 +1,11 @@
 import AppKit
+import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var island: IslandController!
     private var statusItem: NSStatusItem!
-    private let statsItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+    // Recréés à chaque rebuild : un NSMenuItem ne peut vivre que dans un seul menu
+    private var statsItem: NSMenuItem!
     private var muteItem: NSMenuItem!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -21,6 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         header.isEnabled = false
         menu.addItem(header)
 
+        statsItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
         statsItem.isEnabled = false
         menu.addItem(statsItem)
         menu.addItem(.separator())
@@ -32,6 +35,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         muteItem = NSMenuItem(title: Personality.menuMute, action: #selector(toggleMute), keyEquivalent: "")
         muteItem.target = self
         menu.addItem(muteItem)
+
+        if #available(macOS 13.0, *) {
+            let login = NSMenuItem(title: Personality.menuLaunchAtLogin,
+                                   action: #selector(toggleLoginItem), keyEquivalent: "")
+            login.target = self
+            login.state = SMAppService.mainApp.status == .enabled ? .on : .off
+            menu.addItem(login)
+        }
 
         let reset = NSMenuItem(title: Personality.menuReset, action: #selector(resetStats), keyEquivalent: "")
         reset.target = self
@@ -60,7 +71,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func refreshStats() {
-        statsItem.title = island.statsLine
+        statsItem?.title = island.statsLine
         muteItem?.state = SoundBox.muted ? .on : .off
     }
 
@@ -76,6 +87,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func pickLanguage(_ sender: NSMenuItem) {
         guard let raw = sender.representedObject as? String, let lang = Lang(rawValue: raw) else { return }
         L10n.lang = lang
+        rebuildMenu()
+    }
+
+    @objc private func toggleLoginItem() {
+        guard #available(macOS 13.0, *) else { return }
+        let svc = SMAppService.mainApp
+        do {
+            if svc.status == .enabled { try svc.unregister() }
+            else { try svc.register() }
+        } catch {
+            NSLog("Slotch login item: \(error.localizedDescription)")
+        }
         rebuildMenu()
     }
 }

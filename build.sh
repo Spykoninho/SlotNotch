@@ -7,11 +7,13 @@ APP="Slotch.app"
 NAME="Slotch"
 
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 swiftc -O Sources/*.swift \
-  -framework AppKit -framework QuartzCore \
+  -framework AppKit -framework QuartzCore -framework ServiceManagement \
   -o "$APP/Contents/MacOS/$NAME"
+
+[[ -f Resources/AppIcon.icns ]] && cp Resources/AppIcon.icns "$APP/Contents/Resources/"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -26,10 +28,14 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 	<string>Slotch</string>
 	<key>CFBundleDisplayName</key>
 	<string>Slotch</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>12.0</string>
 	<key>LSUIElement</key>

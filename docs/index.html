@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slotch — le bandit à encoche</title>
+<meta name="description" content="Une machine à sous cachée derrière le notch de ton Mac. Approche ton curseur, tire le levier.">
+<link rel="icon" href="assets/icon.png">
+<style>
+  :root {
+    --bg: #120409;
+    --burgundy: #2a070d;
+    --gold: #d9b45a;
+    --gold-bright: #f2dc8f;
+    --gold-dark: #8a6a28;
+    --ivory: #f2ead8;
+    --amber: #ffaf36;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--burgundy), var(--bg) 70%);
+    color: var(--ivory);
+    font: 17px/1.65 Georgia, 'Times New Roman', serif;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+  header { text-align: center; padding: 72px 0 24px; }
+  .icon { width: 116px; height: 116px; }
+  h1 {
+    font-family: Copperplate, 'Copperplate Gothic', Georgia, serif;
+    font-size: 56px; letter-spacing: 14px; text-indent: 14px;
+    margin-top: 18px;
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold) 55%, var(--gold-dark));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .tagline { font-style: italic; opacity: 0.85; margin-top: 6px; font-size: 19px; }
+  .sub { opacity: 0.6; font-size: 14px; margin-top: 4px; letter-spacing: 1px; }
+  .cta { margin: 36px 0 8px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .btn {
+    display: inline-block; padding: 13px 30px; border-radius: 10px;
+    font-family: Copperplate, Georgia, serif; letter-spacing: 2px; font-size: 16px;
+    text-decoration: none; color: #1c1005;
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold) 60%, var(--gold-dark));
+    border: 1px solid var(--gold-dark);
+    box-shadow: 0 6px 22px rgba(217, 180, 90, 0.25), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .brew {
+    font: 14px/1 ui-monospace, Menlo, monospace; color: var(--amber);
+    background: #1a0d05; border: 1px solid #4a3820; border-radius: 8px; padding: 13px 18px;
+  }
+  .hero { display: block; width: 100%; max-width: 780px; margin: 34px auto 0; }
+  .rule {
+    height: 2px; margin: 56px auto; max-width: 520px; border: 0;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+  .card {
+    background: rgba(42, 7, 13, 0.55); border: 1px solid rgba(217, 180, 90, 0.35);
+    border-radius: 14px; padding: 26px 24px;
+  }
+  .card h3 {
+    font-family: Copperplate, Georgia, serif; letter-spacing: 2px; font-size: 17px;
+    color: var(--gold); margin-bottom: 10px;
+  }
+  .card p { font-size: 15.5px; opacity: 0.9; }
+  h2 {
+    font-family: Copperplate, Georgia, serif; letter-spacing: 4px; font-size: 24px;
+    color: var(--gold); text-align: center; margin-bottom: 28px;
+  }
+  table { width: 100%; max-width: 640px; margin: 0 auto; border-collapse: collapse; font-size: 15.5px; }
+  td { padding: 10px 14px; border-bottom: 1px solid rgba(217, 180, 90, 0.18); }
+  td:first-child { font-family: Copperplate, Georgia, serif; letter-spacing: 1px; color: var(--gold-bright); white-space: nowrap; }
+  footer { text-align: center; padding: 64px 0 44px; opacity: 0.55; font-size: 14px; }
+  footer a { color: var(--gold); }
+  @media (max-width: 600px) { h1 { font-size: 38px; letter-spacing: 8px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img class="icon" src="assets/icon.png" alt="Icône Slotch">
+    <h1>SLOTCH</h1>
+    <p class="tagline">Le Bandit à Encoche.</p>
+    <p class="sub">A slot machine hiding behind your Mac's notch — FR · EN</p>
+    <div class="cta">
+      <!-- Remplacer par le lien GitHub Releases après la première release -->
+      <a class="btn" href="https://github.com/REMPLACER_USER/slotch/releases/latest">Télécharger pour macOS</a>
+      <code class="brew">brew install --cask REMPLACER_USER/tap/slotch</code>
+    </div>
+    <img class="hero" src="assets/hero.png" alt="Slotch déplié sous le notch : triple cerises, ticker LED, levier chromé">
+  </header>
+
+  <hr class="rule">
+
+  <section class="cards">
+    <div class="card">
+      <h3>Dessiné à la main</h3>
+      <p>Cadre laiton riveté, rouleaux ivoire sous verre bombé, ticker LED 5×7,
+      compteur 7 segments. Chaque symbole est tracé en Core Graphics —
+      zéro emoji, zéro image importée.</p>
+    </div>
+    <div class="card">
+      <h3>Il a du caractère</h3>
+      <p>Il te nargue en français ou en anglais, offre le premier tirage, truque
+      des near-miss pour le drame, et craque avant toi si la chance t'abandonne
+      trop longtemps.</p>
+    </div>
+    <div class="card">
+      <h3>Des crédits, pour de faux</h3>
+      <p>20 crédits offerts, −1 par tirage, +77 le jackpot. Fauché ? La maison
+      régale. Aucun vrai argent, aucune pub, aucun compte — juste ta pause café.</p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section>
+    <h2>LES COMBINAISONS</h2>
+    <table>
+      <tr><td>7 · 7 · 7</td><td>Jackpot — explosion dorée, pluie de pièces, lettres de marquise</td></tr>
+      <tr><td>CERISES ×3</td><td>Pluie de cerises sur tout l'écran</td></tr>
+      <tr><td>CLOCHE ×3</td><td>Ding ding ding — ondes dorées et carillon</td></tr>
+      <tr><td>BAR ×3</td><td>Pluie de lingots, lourde comme il se doit</td></tr>
+      <tr><td>DIAMANT ×3</td><td>Scintillements et rai de lumière</td></tr>
+      <tr><td>FER ×3</td><td>La veine verte</td></tr>
+      <tr><td>7 · 7 · ✗</td><td>Near-miss. Flash rouge. Douleur.</td></tr>
+    </table>
+  </section>
+
+  <footer>
+    <p>Fait à la main en Swift, AppKit et Core Animation — sans Xcode.<br>
+    <a href="https://github.com/REMPLACER_USER/slotch">Code source sur GitHub</a> ·
+    macOS 12+ · le notch est optionnel, l'addiction aussi</p>
+  </footer>
+
+</div>
+</body>
+</html>

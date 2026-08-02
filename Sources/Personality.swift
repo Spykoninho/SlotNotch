@@ -125,6 +125,7 @@ enum Personality {
     // Menu barre des menus
     static var menuTestSpin: String { one("Tirage d'essai", "Test spin") }
     static var menuMute: String { one("Silencieux", "Mute") }
+    static var menuLaunchAtLogin: String { one("Lancer au démarrage", "Launch at login") }
     static var menuReset: String { one("Remettre les compteurs à zéro", "Reset counters") }
     static var menuLanguage: String { one("Langue", "Language") }
     static var menuQuit: String { one("Quitter", "Quit") }

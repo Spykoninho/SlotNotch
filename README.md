@@ -55,11 +55,25 @@ ampoules, lettrage doré. Zéro emoji, zéro image importée.
 C'est tout. Pas d'Xcode, pas de dépendances, pas de permissions système.
 `swiftc` + AppKit + Core Animation, ~2 000 lignes.
 
-- L'app vit dans la barre des menus : **🎰** (stats, tirage d'essai, langue, mode silencieux, quitter).
+- L'app vit dans la barre des menus : **🎰** (stats, tirage d'essai, langue,
+  lancement au démarrage, mode silencieux, quitter).
 - Pas d'icône Dock, pas de vol de focus : la fenêtre est un panneau non-activant,
   transparent aux clics quand l'île est repliée.
 - Sans encoche ? Ça marche aussi — l'île sort du haut-centre de l'écran,
   là où l'encoche aurait dû être. Le Bandit ne juge pas ton matériel.
+
+## Publier
+
+```bash
+./tools/make_icon.sh   # régénère l'icône depuis le code (CasinoArt → .icns)
+./release.sh 1.0       # build signé Developer ID + notarisation + DMG
+```
+
+`release.sh` exige un certificat « Developer ID Application » et un profil
+notarytool (`xcrun notarytool store-credentials slotch-notary …`, voir l'en-tête
+du script). Il imprime le sha256 à reporter dans
+[packaging/homebrew/slotch.rb](packaging/homebrew/slotch.rb) pour le cask.
+La page vitrine vit dans [docs/](docs/) — prête pour GitHub Pages.
 
 ## Anatomie
 
@@ -75,6 +89,9 @@ Sources/
 ├── Personality.swift      # la voix du Bandit
 ├── EffectsOverlay.swift   # les effets plein écran
 └── SoundBox.swift         # sons système, coupables
+tools/                     # générateur d'icône
+docs/                      # la page vitrine (GitHub Pages)
+packaging/homebrew/        # le cask, prêt à copier dans un tap
 ```
 
 *Aucune productivité n'a été épargnée pendant le développement de cette application.*
