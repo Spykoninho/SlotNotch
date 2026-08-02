@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Slotch — la machine à sous cachée dans le notch</title>
-<meta name="description" content="Une machine à sous qui se cache derrière le notch de ton Mac. Essaie-la directement dans la page.">
+<title>Slotch — the slot machine hiding in your Mac's notch</title>
+<meta name="description" content="A slot machine hiding behind your Mac's notch. Try it right on this page.">
 <link rel="icon" href="assets/icon.png">
 <style>
   :root {
@@ -346,20 +346,20 @@
   </nav>
 
   <header class="hero">
-    <h1>La machine à sous cachée <em>dans le notch</em>.</h1>
-    <p class="lead">Approche ton curseur de l'encoche.</p>
+    <h1>The slot machine hiding <em>in the notch</em>.</h1>
+    <p class="lead">Move your cursor to the notch.</p>
     <div class="cta">
-      <a class="btn" href="https://github.com/Spykoninho/SlotNotch/releases/latest">Télécharger pour macOS</a>
-      <code class="brew" id="brew" title="Cliquer pour copier">brew install --cask spykoninho/tap/slotch</code>
+      <a class="btn" href="https://github.com/Spykoninho/SlotNotch/releases/latest">Download for macOS</a>
+      <code class="brew" id="brew" title="Click to copy">brew install --cask spykoninho/tap/slotch</code>
     </div>
-    <p class="meta">Gratuit · Open source · macOS 12+ · aucun vrai argent, promis</p>
+    <p class="meta">Free · Open source · macOS 12+ · no real money, promise</p>
   </header>
 
   <section class="demo">
     <div class="macwrap"><div class="mac" id="mac">
       <div class="screen" id="screen">
         <div class="menubar">
-          <div class="l"><b></b><b>Slotch</b><span>Fichier</span><span>Édition</span><span>Aide</span></div>
+          <div class="l"><b></b><b>Slotch</b><span>File</span><span>Edit</span><span>Help</span></div>
           <div class="r"><span>⏻</span><span id="clock">11:11</span></div>
         </div>
         <div class="pill" id="pill">
@@ -376,11 +376,11 @@
           </div>
           <div class="lever" id="lever"><div class="bracket"></div><div class="arm"></div></div>
         </div>
-        <div class="notch" id="notch" title="Le notch"></div>
+        <div class="notch" id="notch" title="The notch"></div>
         <div class="fx" id="fx"></div>
       </div>
     </div></div>
-    <p class="hint" id="hint"><b>Essaie ici</b> — approche ton curseur du notch, puis clique sur la machine.</p>
+    <p class="hint" id="hint"><b>Try it</b> — move your cursor to the notch, then click the machine.</p>
   </section>
 </div>
 
@@ -438,11 +438,11 @@
     });
   }
 
-  const GREET = ["Un p'tit tour ?", "Clique. Tu sais que tu en as envie.", "Slotch t'attendait.", "Pssst. Par ici.", "Tire sur le levier, on verra bien."];
-  const LOSE = ["Encore un p'tit tour ?", "La chance tourne. Pas pour toi.", "C'était presque bien.", "Statistiquement, ça devait arriver.", "Même la pomme a plus de chance."];
-  const NEAR = ["NON MAIS SI PRÈS ?!", "Le troisième 7 est en RTT.", "Deux 7. Le destin est cruel."];
-  const PAIR = ["Presque ! Enfin… presque presque.", "Deux sur trois. Comme au loto. Non.", "Ça chauffe. Tiède, disons."];
-  const TRIPLE = { 0: "PLUIE DE CERISES !", 2: "DING DING DING !", 3: "TRIPLE BAR. Le grand classique.", 4: "DIAMANTS. Quelle classe.", 5: "FER À CHEVAL. Veinard, va." };
+  const GREET = ["Fancy a spin?", "Click. You know you want to.", "Slotch was waiting for you.", "Psst. Over here.", "Pull the lever, see what happens."];
+  const LOSE = ["One more spin?", "Luck turns. Not for you.", "That was almost good.", "Statistically, this was bound to happen.", "Even the apple has better odds."];
+  const NEAR = ["SO CLOSE?!", "The third 7 called in sick.", "Two 7s. Fate is cruel."];
+  const PAIR = ["Almost! Well… almost almost.", "Two out of three. Like the lottery. No.", "Getting warm. Lukewarm, really."];
+  const TRIPLE = { 0: "CHERRY RAIN!", 2: "DING DING DING!", 3: "TRIPLE BAR. The classic.", 4: "DIAMONDS. So classy.", 5: "HORSESHOE. Lucky you." };
   const pick = a => a[Math.floor(Math.random() * a.length)];
 
   // ---------- apparition ----------
@@ -506,13 +506,13 @@
 
   // ---------- moteur (portage du Swift) ----------
   function draw() {
-    if (!hasSpun) { hasSpun = true; return { reels: [0, 0, 0], out: 'triple', s: 0, msg: "Cadeau de la maison. Reviens quand tu veux." }; }
+    if (!hasSpun) { hasSpun = true; return { reels: [0, 0, 0], out: 'triple', s: 0, msg: "House gift. Come back anytime." }; }
     if (sinceTriple >= 10) {
       const s = Math.random() < 0.15 ? 1 : 2 + Math.floor(Math.random() * 4);
-      return { reels: [s, s, s], out: s === 1 ? 'jackpot' : 'triple', s, msg: "Bon. Tiens. Tu me faisais de la peine." };
+      return { reels: [s, s, s], out: s === 1 ? 'jackpot' : 'triple', s, msg: "Fine. Here. You were breaking my heart." };
     }
     const roll = Math.random();
-    if (roll < 0.015) return { reels: [1, 1, 1], out: 'jackpot', s: 1, msg: "JACKPOT. Encadre cet écran." };
+    if (roll < 0.015) return { reels: [1, 1, 1], out: 'jackpot', s: 1, msg: "JACKPOT. Frame this screen." };
     if (roll < 0.115) { const s = pick([0, 2, 3, 4, 5]); return { reels: [s, s, s], out: 'triple', s, msg: TRIPLE[s] }; }
     if (roll < 0.40) {
       const s = pick([0, 2, 3, 4, 5]); let o = Math.floor(Math.random() * 6);
@@ -533,7 +533,7 @@
     spinning = true;
     credits -= 1; setCredits();
     jewel.className = 'jewel spin';
-    say(pick(["…", "ça tourne…", "croise les doigts…"]));
+    say(pick(["…", "spinning…", "cross your fingers…"]));
     lever.classList.add('pulled');
     setTimeout(() => lever.classList.remove('pulled'), 380);
     beep(300, 0.06, 0.03);
@@ -570,7 +570,7 @@
       credits += 12; jewel.className = 'jewel win';
       say(r.msg, 'gold'); chase(4);
       const map = { 0: 'sym0', 2: 'sym2', 3: 'sym3', 4: 'sym4', 5: 'sym5' };
-      bigwin({ 0: 'CERISES', 2: 'DING DING DING', 3: 'BAR BAR BAR', 4: 'DIAMANTS', 5: 'VEINARD' }[r.s] || 'TRIPLE');
+      bigwin({ 0: 'CHERRIES', 2: 'DING DING DING', 3: 'BAR BAR BAR', 4: 'DIAMONDS', 5: 'LUCKY YOU' }[r.s] || 'TRIPLE');
       rain(map[r.s] || 'coin', 26);
       [659, 880].forEach((f, i) => setTimeout(() => beep(f, 0.2, 0.045, 'triangle'), i * 140));
       holdUntil = Date.now() + 3500;
@@ -587,7 +587,7 @@
       say(r.msg);
     }
     if (credits <= 0 && (r.out === 'lose' || r.out === 'near')) {
-      credits = 10; say('La maison régale : +10 crédits.', 'gold');
+      credits = 10; say('The house treats you: +10 credits.', 'gold');
     }
     setCredits(); save();
   }
@@ -617,12 +617,12 @@
 
   // ---------- divers ----------
   const clk = () => $('clock').textContent =
-    new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   clk(); setInterval(clk, 20000);
 
   $('brew').addEventListener('click', () => {
     navigator.clipboard?.writeText('brew install --cask spykoninho/tap/slotch');
-    $('brew').textContent = 'copié ✓';
+    $('brew').textContent = 'copied ✓';
     setTimeout(() => $('brew').textContent = 'brew install --cask spykoninho/tap/slotch', 1400);
   });
 
@@ -635,7 +635,7 @@
   fit(); addEventListener('resize', fit);
 
   // coucou d'accueil sur mobile / au chargement
-  if (matchMedia('(hover: none)').matches) $('hint').innerHTML = '<b>Essaie ici</b> — touche le notch, puis la machine.';
+  if (matchMedia('(hover: none)').matches) $('hint').innerHTML = '<b>Try it</b> — tap the notch, then the machine.';
 })();
 </script>
 </body>
