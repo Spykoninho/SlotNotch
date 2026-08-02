@@ -4,8 +4,8 @@
 # (release.sh affiche les deux). Installation côté utilisateur :
 #   brew install --cask spykoninho/tap/slotch
 cask "slotch" do
-  version "1.1"
-  sha256 "4ddd80f6b79c26ad86ac53ce327ea3f03efa16e9daadf090c19829f0d3f10fbd"
+  version "1.2"
+  sha256 "6a2fe3f77e5fed69a8079bfe12451836ad20ab1152bd4f8f9a31387e339bbb55"
 
   url "https://github.com/Spykoninho/SlotNotch/releases/download/#{version}/Slotch-#{version}.dmg"
   name "Slotch"

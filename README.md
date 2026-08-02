@@ -45,6 +45,10 @@ gold lettering. Zero emoji, zero imported images.
 
 ## The personality
 
+- **Two games in one notch** — the slot machine, or a blackjack table
+  (🎰 menu → Game). Same cabinet, same shared credits.
+- **Patient by design** — the island only opens after your cursor lingers
+  2 seconds under the notch. No accidental casinos.
 - **First spin always wins** — house gift.
 - **Built-in mercy** — 25 spins without a triple and the machine cracks before you do.
 - **Rigged near-misses** — 25% of losses show 7·7·✗, because drama is life.

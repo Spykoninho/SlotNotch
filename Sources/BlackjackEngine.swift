@@ -40,13 +40,19 @@ final class BlackjackEngine {
     var dealerValue: Int { Self.value(dealer) }
     var playerHasNatural: Bool { player.count == 2 && playerValue == 21 }
 
-    /// Nouvelle main : débite la mise, distribue 2+2
-    func deal() {
+    /// Nouvelle main : débite la mise pleine (la maison régale si besoin), distribue 2+2
+    func deal() -> Bool {
         deck = (0..<52).map { PlayingCard(rank: $0 % 13 + 1, suit: $0 / 13) }.shuffled()
-        d.set(max(0, credits - bet), forKey: "credits")
+        var refilled = false
+        if credits < bet {
+            d.set(credits + 10, forKey: "credits")
+            refilled = true
+        }
+        d.set(credits - bet, forKey: "credits")
         player = [deck.removeLast(), deck.removeLast()]
         dealer = [deck.removeLast(), deck.removeLast()]
         state = .playerTurn
+        return refilled
     }
 
     /// Tire une carte pour le joueur

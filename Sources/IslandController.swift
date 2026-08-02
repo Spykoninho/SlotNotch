@@ -277,6 +277,7 @@ final class IslandController {
 
     // À l'ouverture : reprend la main en cours, sinon distribue
     private func bjEnter() {
+        guard !bjBusy else { return }
         view.setLED(.idle)
         if bj.state == .playerTurn {
             resultHoldUntil = Date().addingTimeInterval(3)
@@ -296,11 +297,11 @@ final class IslandController {
         bjBusy = true
         resultHoldUntil = Date().addingTimeInterval(3)
         lastInside = Date()
-        bj.deal()
+        let refilled = bj.deal()
         view.setCredits(bj.credits)
         statsChanged?()
         view.setLED(.spin)
-        view.setMessage(Personality.bjDealing)
+        view.setMessage(refilled ? Personality.houseGift : Personality.bjDealing)
         view.bjSetTotals(player: nil, dealer: nil)
         view.bjButtons(enabled: false)
         view.bjStartHand(player: bj.player, dealer: bj.dealer)
@@ -372,10 +373,11 @@ final class IslandController {
 
     private func bjFinish() {
         bjBusy = false
-        view.bjSetTotals(player: bj.playerValue, dealer: bj.dealerValue)
         let r = bj.settle()
         view.setCredits(bj.credits)
         statsChanged?()
+        guard gameMode == .blackjack else { return }
+        view.bjSetTotals(player: bj.playerValue, dealer: bj.dealerValue)
         view.bjButtons(enabled: false)
         resultHoldUntil = Date().addingTimeInterval(3.2)
         lastInside = Date()
@@ -416,9 +418,10 @@ final class IslandController {
     }
 
     func setGameMode(_ m: GameMode) {
+        let changed = m != gameMode
         UserDefaults.standard.set(m.rawValue, forKey: "game")
-        view.setMode(m)
-        if expanded {
+        view.setMode(m)   // regrave aussi les libellés (langue)
+        if expanded, changed {
             if m == .blackjack {
                 bjEnter()
             } else {
@@ -432,10 +435,12 @@ final class IslandController {
 
     private func resolve(_ r: SpinResult) {
         spinning = false
-        resultHoldUntil = Date().addingTimeInterval(2.6)
-        lastInside = Date()
         view.setCredits(engine.credits)
         statsChanged?()
+        // Jeu changé pendant la rotation : les gains sont comptés, pas la mise en scène
+        guard gameMode == .slots else { return }
+        resultHoldUntil = Date().addingTimeInterval(2.6)
+        lastInside = Date()
 
         switch r.outcome {
         case .jackpot:
