@@ -1,6 +1,8 @@
-# 🎰 Le Bandit à Encoche
+# 🎰 Slotch
 
-> Il vit derrière le notch de ton Mac. Il attend. Il te nargue.
+> *Le Bandit à Encoche.*
+
+Il vit derrière le notch de ton Mac. Il attend. Il te nargue.
 
 Approche ton curseur de l'encoche : un cabinet de machine à sous glisse hors du
 notch, façon Dynamic Island. Cadre laiton riveté, façade bordeaux feutrée,
@@ -42,7 +44,7 @@ ampoules, lettrage doré. Zéro emoji, zéro image importée.
 - **Premier tirage toujours gagnant** — cadeau de la maison.
 - **Pitié intégrée** — 25 tours sans triplette et la machine craque avant toi.
 - **Near-miss truqués** — 25 % des pertes affichent 7·7·✗, parce que le drame, c'est la vie.
-- **Elle parle** — taquineries françaises sur le ticker, lampe d'humeur, levier qui se tire tout seul.
+- **Elle parle** — français ou anglais (menu 🎰 → Langue), taquineries sur le ticker, lampe d'humeur, levier qui se tire tout seul.
 
 ## Construire & lancer
 
@@ -53,7 +55,7 @@ ampoules, lettrage doré. Zéro emoji, zéro image importée.
 C'est tout. Pas d'Xcode, pas de dépendances, pas de permissions système.
 `swiftc` + AppKit + Core Animation, ~2 000 lignes.
 
-- L'app vit dans la barre des menus : **🎰** (stats, tirage d'essai, mode silencieux, quitter).
+- L'app vit dans la barre des menus : **🎰** (stats, tirage d'essai, langue, mode silencieux, quitter).
 - Pas d'icône Dock, pas de vol de focus : la fenêtre est un panneau non-activant,
   transparent aux clics quand l'île est repliée.
 - Sans encoche ? Ça marche aussi — l'île sort du haut-centre de l'écran,

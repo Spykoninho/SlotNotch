@@ -1,10 +1,10 @@
 #!/bin/zsh
-# Construit BanditEncoche.app — usage: ./build.sh [--run]
+# Construit Slotch.app — usage: ./build.sh [--run]
 set -e
 cd "$(dirname "$0")"
 
-APP="BanditEncoche.app"
-NAME="BanditEncoche"
+APP="Slotch.app"
+NAME="Slotch"
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS"
@@ -19,13 +19,13 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <plist version="1.0">
 <dict>
 	<key>CFBundleExecutable</key>
-	<string>BanditEncoche</string>
+	<string>Slotch</string>
 	<key>CFBundleIdentifier</key>
-	<string>fr.mathis.bandit-encoche</string>
+	<string>fr.mathis.slotch</string>
 	<key>CFBundleName</key>
-	<string>BanditEncoche</string>
+	<string>Slotch</string>
 	<key>CFBundleDisplayName</key>
-	<string>Le Bandit à Encoche</string>
+	<string>Slotch</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

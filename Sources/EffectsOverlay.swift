@@ -187,7 +187,7 @@ enum EffectsOverlay {
         coin.spin = 3
         _ = rain(root, cells: [coin], birthDuration: 4)
 
-        banner("JACKPOT", in: root, size: 120, hold: 3)
+        banner(Personality.bannerJackpot, in: root, size: 120, hold: 3)
     }
 
     // Triple cloche : ondes sonores dorées + carillon
@@ -236,7 +236,7 @@ enum EffectsOverlay {
         bell.spinRange = 2
         _ = rain(root, cells: [bell], birthDuration: 2.6)
 
-        banner("DING DING DING", in: root, size: 72, delay: 0.3, hold: 2)
+        banner(Personality.bannerBell, in: root, size: 72, delay: 0.3, hold: 2)
     }
 
     // Triple BAR : la fortune tombe du ciel, lourde
@@ -264,7 +264,7 @@ enum EffectsOverlay {
         sym.scaleRange = 0.3
         _ = rain(root, cells: [sym], birthDuration: 3)
 
-        banner("BAR BAR BAR", in: root, size: 84, delay: 0.2, hold: 2.2)
+        banner(Personality.bannerBar, in: root, size: 84, delay: 0.2, hold: 2.2)
     }
 
     // Triple diamant : scintillements et balayage lumineux
@@ -319,7 +319,7 @@ enum EffectsOverlay {
         sweep.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
         ray.add(sweep, forKey: "sweep")
 
-        banner("DIAMANTS", in: root, size: 84, delay: 0.5, hold: 1.8)
+        banner(Personality.bannerDiamond, in: root, size: 84, delay: 0.5, hold: 1.8)
     }
 
     // Triple fer à cheval : la veine verte
@@ -349,7 +349,7 @@ enum EffectsOverlay {
         shoe.spinRange = 3
         _ = rain(root, cells: [shoe], birthDuration: 3)
 
-        banner("VEINARD", in: root, size: 90, delay: 0.3, hold: 2)
+        banner(Personality.bannerShoe, in: root, size: 90, delay: 0.3, hold: 2)
     }
 
     private static func nearMiss(_ screen: NSScreen) {

@@ -46,8 +46,7 @@ final class SlotEngine {
         // Cadeau de bienvenue : la maison offre toujours le premier tour
         if !d.bool(forKey: "hasSpun") {
             d.set(true, forKey: "hasSpun")
-            return record(.triple(0), reels: [0, 0, 0],
-                          message: "Cadeau de la maison. Reviens quand tu veux.")
+            return record(.triple(0), reels: [0, 0, 0], message: Personality.welcome)
         }
 
         // Pitié : 25 tours sans triplette, la machine craque avant toi
@@ -105,7 +104,7 @@ final class SlotEngine {
             // Fauché : la maison régale, comme toutes les maisons honnêtes
             if credits <= 0 {
                 d.set(10, forKey: "credits")
-                msg = message + " La maison régale : +10 crédits."
+                msg = message + " " + Personality.houseGift
             }
         }
         return SpinResult(reels: reels, outcome: outcome, message: msg)

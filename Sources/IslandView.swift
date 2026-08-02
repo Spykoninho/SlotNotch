@@ -149,15 +149,15 @@ final class IslandView: NSView {
         plaque.borderColor = CasinoArt.brassDark.cgColor
         pillBody.addSublayer(plaque)
 
-        let font = NSFont(name: "Copperplate-Bold", size: 8.5) ?? NSFont.boldSystemFont(ofSize: 8.5)
+        let font = NSFont(name: "Copperplate-Bold", size: 10) ?? NSFont.boldSystemFont(ofSize: 10)
         func plaqueText(_ color: NSColor, dy: CGFloat) {
             let t = CATextLayer()
-            t.string = NSAttributedString(string: "LE BANDIT À ENCOCHE", attributes: [
-                .font: font, .foregroundColor: color, .kern: 1.1,
+            t.string = NSAttributedString(string: "· SLOTCH ·", attributes: [
+                .font: font, .foregroundColor: color, .kern: 3.5,
             ])
             t.alignmentMode = .center
             t.contentsScale = 2
-            t.frame = CGRect(x: 87, y: 102.5 + dy, width: 170, height: 12)
+            t.frame = CGRect(x: 87, y: 102 + dy, width: 170, height: 13)
             pillBody.addSublayer(t)
         }
         // Gravure : filet clair dessous, creux sombre dessus

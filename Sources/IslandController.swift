@@ -78,22 +78,22 @@ final class IslandController {
         }
         timer.map { RunLoop.main.add($0, forMode: .common) }
 
-        // Tirage scriptable : `notifyutil -p fr.mathis.bandit.spin`
+        // Tirage scriptable : `notifyutil -p fr.mathis.slotch.spin`
         let center = CFNotificationCenterGetDarwinNotifyCenter()
         let observer = UnsafeRawPointer(Unmanaged.passUnretained(self).toOpaque())
         CFNotificationCenterAddObserver(center, observer, { _, obs, _, _, _ in
             guard let obs else { return }
             let me = Unmanaged<IslandController>.fromOpaque(obs).takeUnretainedValue()
             DispatchQueue.main.async { me.spinRequested() }
-        }, "fr.mathis.bandit.spin" as CFString, nil, .deliverImmediately)
+        }, "fr.mathis.slotch.spin" as CFString, nil, .deliverImmediately)
         CFNotificationCenterAddObserver(center, observer, { _, obs, _, _, _ in
             guard let obs else { return }
             let me = Unmanaged<IslandController>.fromOpaque(obs).takeUnretainedValue()
             DispatchQueue.main.async { me.debugDump() }
-        }, "fr.mathis.bandit.dump" as CFString, nil, .deliverImmediately)
+        }, "fr.mathis.slotch.dump" as CFString, nil, .deliverImmediately)
     }
 
-    // Autoportrait de l'île dans /tmp/bandit_dump.png : `notifyutil -p fr.mathis.bandit.dump`
+    // Autoportrait de l'île dans /tmp/slotch_dump.png : `notifyutil -p fr.mathis.slotch.dump`
     private func debugDump() {
         guard let layer = panel.contentView?.layer,
               let rep = NSBitmapImageRep(bitmapDataPlanes: nil,
@@ -108,7 +108,7 @@ final class IslandController {
         // La couche de présentation capture les animations en vol (défilement LED, levier…)
         (layer.presentation() ?? layer).render(in: ctx.cgContext)
         try? rep.representation(using: .png, properties: [:])?
-            .write(to: URL(fileURLWithPath: "/tmp/bandit_dump.png"))
+            .write(to: URL(fileURLWithPath: "/tmp/slotch_dump.png"))
     }
 
     // Écran avec encoche si présent, sinon écran principal
@@ -262,7 +262,8 @@ final class IslandController {
     }
 
     var statsLine: String {
-        "\(engine.spins) tirages · \(engine.triples) triplettes · \(engine.jackpots) jackpots · \(engine.credits) crédits"
+        Personality.statsLine(spins: engine.spins, triples: engine.triples,
+                              jackpots: engine.jackpots, credits: engine.credits)
     }
 
     func resetStats() { engine.resetStats(); statsChanged?() }
