@@ -377,13 +377,13 @@ final class IslandView: NSView {
             let x = 4 + (dotInnerW - w) / 2
             dotText.position = CGPoint(x: 4 + (x - 4).rounded(toMultipleOf: dotPitch), y: midY)
         } else {
-            // Défilement cranté colonne par colonne, comme un vrai ticker
-            dotText.position = CGPoint(x: dotPanelFrame.width, y: midY)
+            // Défilement cranté colonne par colonne, calé sur la grille — comme un vrai ticker
             let step = dotPitch
-            let total = dotPanelFrame.width + w
-            let steps = Int(total / step)
+            let start = 4 + ((dotPanelFrame.width - 4) / step).rounded(.up) * step
+            dotText.position = CGPoint(x: start, y: midY)
+            let steps = Int(ceil((start + w) / step))
             let anim = CAKeyframeAnimation(keyPath: "position.x")
-            anim.values = (0...steps).map { dotPanelFrame.width - CGFloat($0) * step }
+            anim.values = (0...steps).map { start - CGFloat($0) * step }
             anim.calculationMode = .discrete
             anim.duration = Double(steps) * 0.048
             anim.repeatCount = .infinity
