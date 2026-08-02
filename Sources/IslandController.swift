@@ -46,8 +46,9 @@ final class IslandController {
         view = IslandView(frame: rect)
         panel.contentView = view
 
-        // Panneau attrape-clics : cadre = pilule sous le notch, ordonné seulement quand déplié
-        clickPanel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: IslandGeo.pillW,
+        // Panneau attrape-clics : pilule + débord du levier, ordonné seulement quand déplié
+        clickPanel = NSPanel(contentRect: NSRect(x: 0, y: 0,
+                                                 width: IslandGeo.pillW + IslandGeo.leverOverhang,
                                                  height: IslandGeo.pillH - IslandGeo.notchInset),
                              styleMask: [.borderless, .nonactivatingPanel],
                              backing: .buffered, defer: false)
@@ -77,22 +78,22 @@ final class IslandController {
         }
         timer.map { RunLoop.main.add($0, forMode: .common) }
 
-        // Tirage scriptable : `notifyutil -p fr.mathis.bandit.spin`
+        // Tirage scriptable : `notifyutil -p fr.mathis.slotch.spin`
         let center = CFNotificationCenterGetDarwinNotifyCenter()
         let observer = UnsafeRawPointer(Unmanaged.passUnretained(self).toOpaque())
         CFNotificationCenterAddObserver(center, observer, { _, obs, _, _, _ in
             guard let obs else { return }
             let me = Unmanaged<IslandController>.fromOpaque(obs).takeUnretainedValue()
             DispatchQueue.main.async { me.spinRequested() }
-        }, "fr.mathis.bandit.spin" as CFString, nil, .deliverImmediately)
+        }, "fr.mathis.slotch.spin" as CFString, nil, .deliverImmediately)
         CFNotificationCenterAddObserver(center, observer, { _, obs, _, _, _ in
             guard let obs else { return }
             let me = Unmanaged<IslandController>.fromOpaque(obs).takeUnretainedValue()
             DispatchQueue.main.async { me.debugDump() }
-        }, "fr.mathis.bandit.dump" as CFString, nil, .deliverImmediately)
+        }, "fr.mathis.slotch.dump" as CFString, nil, .deliverImmediately)
     }
 
-    // Autoportrait de l'île dans /tmp/bandit_dump.png : `notifyutil -p fr.mathis.bandit.dump`
+    // Autoportrait de l'île dans /tmp/slotch_dump.png : `notifyutil -p fr.mathis.slotch.dump`
     private func debugDump() {
         guard let layer = panel.contentView?.layer,
               let rep = NSBitmapImageRep(bitmapDataPlanes: nil,
@@ -104,9 +105,10 @@ final class IslandController {
                                          bytesPerRow: 0, bitsPerPixel: 0),
               let ctx = NSGraphicsContext(bitmapImageRep: rep) else { return }
         ctx.cgContext.scaleBy(x: 2, y: 2)
-        layer.render(in: ctx.cgContext)
+        // La couche de présentation capture les animations en vol (défilement LED, levier…)
+        (layer.presentation() ?? layer).render(in: ctx.cgContext)
         try? rep.representation(using: .png, properties: [:])?
-            .write(to: URL(fileURLWithPath: "/tmp/bandit_dump.png"))
+            .write(to: URL(fileURLWithPath: "/tmp/slotch_dump.png"))
     }
 
     // Écran avec encoche si présent, sinon écran principal
@@ -128,7 +130,7 @@ final class IslandController {
         // La bande barre-des-menus/notch reste hors du cadre : les menus restent cliquables
         clickPanel.setFrame(NSRect(x: f.midX - IslandGeo.pillW / 2,
                                    y: f.maxY - IslandGeo.pillH,
-                                   width: IslandGeo.pillW,
+                                   width: IslandGeo.pillW + IslandGeo.leverOverhang,
                                    height: IslandGeo.pillH - IslandGeo.notchInset),
                             display: false)
     }
@@ -175,7 +177,9 @@ final class IslandController {
         clickPanel.orderFrontRegardless()
         view.setMessage(Personality.greeting)
         view.setLED(.idle)
+        view.setCredits(engine.credits)
         view.revealPill()
+        view.bulbsChase(rounds: 1)
         SoundBox.play("Pop", volume: 0.25)
     }
 
@@ -193,7 +197,10 @@ final class IslandController {
         view.setMessage(Personality.spinning)
         SoundBox.play("Pop", volume: 0.4)
 
+        // Débit affiché tout de suite ; le gain n'apparaît qu'à l'arrêt des rouleaux
+        let before = engine.credits
         let result = engine.spin()
+        view.setCredits(max(0, before - 1))
         view.spinReels(to: result.reels) { [weak self] in
             self?.resolve(result)
         }
@@ -205,28 +212,33 @@ final class IslandController {
         lastInside = Date()
         panel.orderFrontRegardless()
         clickPanel.orderFrontRegardless()
+        view.setCredits(engine.credits)
         view.revealPill()
+        view.bulbsChase(rounds: 1)
     }
 
     private func resolve(_ r: SpinResult) {
         spinning = false
         resultHoldUntil = Date().addingTimeInterval(2.6)
         lastInside = Date()
+        view.setCredits(engine.credits)
         statsChanged?()
 
         switch r.outcome {
         case .jackpot:
             view.setLED(.jackpot)
-            view.setMessage(r.message, color: NSColor(calibratedRed: 1, green: 0.83, blue: 0.3, alpha: 1))
+            view.setMessage(r.message, tone: .gold)
             view.goldShimmer()
+            view.bulbsFrenzy(duration: 4.5)
             SoundBox.play("Hero", volume: 0.7)
             SoundBox.play("Glass", volume: 0.6, after: 0.5)
             EffectsOverlay.play(.jackpot, on: screen)
             resultHoldUntil = Date().addingTimeInterval(4.5)
         case .triple(let s):
             view.setLED(.win)
-            view.setMessage(r.message, color: NSColor(white: 1, alpha: 0.85))
+            view.setMessage(r.message, tone: .gold)
             view.goldShimmer()
+            view.bulbsChase(rounds: 4)
             SoundBox.play("Glass", volume: 0.6)
             EffectsOverlay.play(.triple(s), on: screen)
             resultHoldUntil = Date().addingTimeInterval(3.5)
@@ -234,10 +246,11 @@ final class IslandController {
             view.setLED(.win)
             view.setMessage(r.message)
             view.sparkleBurst()
+            view.bulbsChase(rounds: 1)
             SoundBox.play("Purr", volume: 0.5)
         case .nearMiss:
             view.setLED(.lose)
-            view.setMessage(r.message, color: NSColor.systemRed.withAlphaComponent(0.85))
+            view.setMessage(r.message, tone: .red)
             EffectsOverlay.play(.nearMiss, on: screen)
             SoundBox.play("Basso", volume: 0.4)
         case .lose:
@@ -249,7 +262,8 @@ final class IslandController {
     }
 
     var statsLine: String {
-        "\(engine.spins) tirages · \(engine.triples) triplettes · \(engine.jackpots) jackpots"
+        Personality.statsLine(spins: engine.spins, triples: engine.triples,
+                              jackpots: engine.jackpots, credits: engine.credits)
     }
 
     func resetStats() { engine.resetStats(); statsChanged?() }
