@@ -19,6 +19,8 @@ enum IslandGeo {
 
 enum LEDState { case idle, spin, win, jackpot, lose }
 enum MsgTone { case amber, gold, red }
+enum GameMode: String { case slots, blackjack }
+enum BJAction { case hit, stand }
 
 final class IslandView: NSView {
     private let pillContainer = CALayer()
@@ -30,6 +32,21 @@ final class IslandView: NSView {
     private var strips: [CALayer] = []
     private var bulbs: [CALayer] = []
     private var currentIndices = [0, 1, 2]
+
+    // Groupes par jeu : rouleaux+levier d'un côté, table de blackjack de l'autre
+    private let slotGroup = CALayer()
+    private let leverGroup = CALayer()
+    private let bjGroup = CALayer()
+    private let bjPlayerCards = CALayer()
+    private let bjDealerCards = CALayer()
+    private let bjPlayerTotal = CALayer()
+    private let bjDealerTotal = CALayer()
+    private var bjHitBtn = CAGradientLayer()
+    private var bjStandBtn = CAGradientLayer()
+    private var bjButtonsOn = false
+    private let bjCardH: CGFloat = 26
+    static let bjHitRect = CGRect(x: 230, y: 66, width: 78, height: 24)
+    static let bjStandRect = CGRect(x: 230, y: 40, width: 78, height: 24)
 
     private let cellH: CGFloat = 58
     private let reelW: CGFloat = 68
@@ -50,6 +67,7 @@ final class IslandView: NSView {
         buildPill()
         buildFaceplate()
         buildReels()
+        buildBlackjack()
         buildMarquee()
         buildDotPanel()
         buildCredits()
@@ -193,6 +211,8 @@ final class IslandView: NSView {
     }
 
     private func buildReels() {
+        slotGroup.frame = pillBody.bounds
+        pillBody.addSublayer(slotGroup)
         for i in 0..<3 {
             let winFrame = CGRect(x: 62 + CGFloat(i) * (reelW + 8), y: 38, width: reelW, height: reelH)
 
@@ -206,7 +226,7 @@ final class IslandView: NSView {
             bezel.cornerRadius = 8
             bezel.borderWidth = 0.8
             bezel.borderColor = NSColor(calibratedWhite: 0, alpha: 0.6).cgColor
-            pillBody.addSublayer(bezel)
+            slotGroup.addSublayer(bezel)
 
             let win = CALayer()
             win.frame = winFrame
@@ -215,7 +235,7 @@ final class IslandView: NSView {
             win.masksToBounds = true
             win.borderWidth = 1.2
             win.borderColor = NSColor(calibratedRed: 0.16, green: 0.09, blue: 0.03, alpha: 0.85).cgColor
-            pillBody.addSublayer(win)
+            slotGroup.addSublayer(win)
 
             let strip = CALayer()
             strip.anchorPoint = .zero
@@ -311,6 +331,7 @@ final class IslandView: NSView {
 
     private func buildLever() {
         // Monté SUR le flanc droit du cabinet, hors de la pilule — pillContainer ne masque pas
+        leverGroup.frame = pillContainer.bounds
         let bracket = CAGradientLayer()
         bracket.frame = CGRect(x: 336, y: 52, width: 26, height: 16)
         bracket.colors = [NSColor(calibratedWhite: 0.30, alpha: 1).cgColor,
@@ -321,14 +342,14 @@ final class IslandView: NSView {
         bracket.cornerRadius = 4
         bracket.borderWidth = 0.6
         bracket.borderColor = NSColor(calibratedWhite: 0.12, alpha: 1).cgColor
-        pillContainer.addSublayer(bracket)
+        leverGroup.addSublayer(bracket)
 
         for x: CGFloat in [340.5, 355.5] {
             let screw = CALayer()
             screw.frame = CGRect(x: x, y: 58, width: 3.5, height: 3.5)
             screw.cornerRadius = 1.75
             screw.backgroundColor = NSColor(calibratedWhite: 0.16, alpha: 1).cgColor
-            pillContainer.addSublayer(screw)
+            leverGroup.addSublayer(screw)
         }
 
         leverArm.bounds = CGRect(x: 0, y: 0, width: 20, height: 56)
@@ -350,7 +371,194 @@ final class IslandView: NSView {
         ball.contents = CasinoArt.redBall(18)
         leverArm.addSublayer(ball)
 
-        pillContainer.addSublayer(leverArm)
+        leverGroup.addSublayer(leverArm)
+        pillContainer.addSublayer(leverGroup)
+    }
+
+    // MARK: - Blackjack
+
+    private func buildBlackjack() {
+        bjGroup.frame = pillBody.bounds
+        bjGroup.isHidden = true
+        pillBody.addSublayer(bjGroup)
+
+        // Table en feutre vert, à la place des rouleaux
+        let felt = CALayer()
+        felt.frame = CGRect(x: 28, y: 38, width: 288, height: 58)
+        felt.backgroundColor = CasinoArt.feltGreen.cgColor
+        felt.cornerRadius = 8
+        felt.borderWidth = 1.5
+        felt.borderColor = CasinoArt.brassDark.cgColor
+        felt.masksToBounds = true
+        bjGroup.addSublayer(felt)
+
+        let grain = CALayer()
+        grain.frame = felt.bounds
+        grain.contents = CasinoArt.noise(288, 58)
+        grain.opacity = 0.45
+        felt.addSublayer(grain)
+
+        let liseret = CALayer()
+        liseret.frame = felt.bounds.insetBy(dx: 3, dy: 3)
+        liseret.cornerRadius = 6
+        liseret.borderWidth = 1
+        liseret.borderColor = NSColor(calibratedRed: 0.85, green: 0.75, blue: 0.45, alpha: 0.28).cgColor
+        felt.addSublayer(liseret)
+
+        bjDealerCards.frame = CGRect(x: 38, y: 67, width: 150, height: 26)
+        bjPlayerCards.frame = CGRect(x: 38, y: 41, width: 150, height: 26)
+        bjGroup.addSublayer(bjDealerCards)
+        bjGroup.addSublayer(bjPlayerCards)
+
+        bjDealerTotal.frame = CGRect(x: 196, y: 73, width: 20, height: 13)
+        bjPlayerTotal.frame = CGRect(x: 196, y: 47, width: 20, height: 13)
+        bjDealerTotal.contentsGravity = .resizeAspect
+        bjPlayerTotal.contentsGravity = .resizeAspect
+        bjGroup.addSublayer(bjDealerTotal)
+        bjGroup.addSublayer(bjPlayerTotal)
+
+        bjHitBtn = makeBJButton(Self.bjHitRect)
+        bjStandBtn = makeBJButton(Self.bjStandRect)
+        renderBJButtonTitles()
+    }
+
+    private func makeBJButton(_ rect: CGRect) -> CAGradientLayer {
+        let b = CAGradientLayer()
+        b.frame = rect
+        b.colors = [CasinoArt.brassDark.cgColor, CasinoArt.brass.cgColor,
+                    CasinoArt.brassLight.cgColor, CasinoArt.brass.cgColor]
+        b.locations = [0, 0.45, 0.75, 1]
+        b.startPoint = CGPoint(x: 0.5, y: 0)
+        b.endPoint = CGPoint(x: 0.5, y: 1)
+        b.cornerRadius = 6
+        b.borderWidth = 1
+        b.borderColor = CasinoArt.brassDark.cgColor
+        bjGroup.addSublayer(b)
+        return b
+    }
+
+    /// (Re)grave les libellés TIRER/RESTER — appelé au changement de langue
+    private func renderBJButtonTitles() {
+        let font = NSFont(name: "Copperplate-Bold", size: 9.5) ?? NSFont.boldSystemFont(ofSize: 9.5)
+        for (btn, title) in [(bjHitBtn, Personality.bjHit), (bjStandBtn, Personality.bjStand)] {
+            btn.sublayers?.forEach { $0.removeFromSuperlayer() }
+            func put(_ color: NSColor, dy: CGFloat) {
+                let t = CATextLayer()
+                t.string = NSAttributedString(string: title, attributes: [
+                    .font: font, .foregroundColor: color, .kern: 1.6,
+                ])
+                t.alignmentMode = .center
+                t.contentsScale = 2
+                t.frame = CGRect(x: 0, y: 5.5 + dy, width: btn.bounds.width, height: 12)
+                btn.addSublayer(t)
+            }
+            put(NSColor(calibratedWhite: 1, alpha: 0.30), dy: -0.9)
+            put(NSColor(calibratedRed: 0.20, green: 0.11, blue: 0.03, alpha: 0.95), dy: 0)
+        }
+    }
+
+    func setMode(_ m: GameMode) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        slotGroup.isHidden = m != .slots
+        leverGroup.isHidden = m != .slots
+        bjGroup.isHidden = m != .blackjack
+        renderBJButtonTitles()
+        CATransaction.commit()
+    }
+
+    private func cardLayer(_ c: PlayingCard?, index: Int) -> CALayer {
+        let l = CALayer()
+        l.frame = CGRect(x: CGFloat(index) * 15, y: 0, width: bjCardH * 0.72, height: bjCardH)
+        l.contents = c.flatMap { CasinoArt.card(rank: $0.rank, suit: $0.suit, height: bjCardH) }
+            ?? CasinoArt.cardBack(height: bjCardH)
+        l.shadowColor = NSColor.black.cgColor
+        l.shadowOpacity = 0.35
+        l.shadowRadius = 2
+        l.shadowOffset = CGSize(width: 0, height: -1)
+        return l
+    }
+
+    // La carte arrive du notch, comme tout le reste ici
+    private func addCard(_ c: PlayingCard?, to container: CALayer, index: Int, delay: Double) {
+        let l = cardLayer(c, index: index)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        container.addSublayer(l)
+        CATransaction.commit()
+
+        let from = CGPoint(x: 172 - container.frame.origin.x, y: 150 - container.frame.origin.y)
+        let move = CABasicAnimation(keyPath: "position")
+        move.fromValue = NSValue(point: from)
+        move.toValue = NSValue(point: l.position)
+        let turn = CABasicAnimation(keyPath: "transform.rotation.z")
+        turn.fromValue = 0.55
+        turn.toValue = 0
+        let fade = CABasicAnimation(keyPath: "opacity")
+        fade.fromValue = 0.2
+        fade.toValue = 1
+        for (key, anim) in [("deal", move), ("turn", turn), ("fade", fade)] {
+            anim.duration = 0.32
+            anim.beginTime = CACurrentMediaTime() + delay
+            anim.fillMode = .backwards
+            anim.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            l.add(anim, forKey: key)
+        }
+    }
+
+    /// Nouvelle main : reconstruit les deux rangées, hole card cachée
+    func bjStartHand(player: [PlayingCard], dealer: [PlayingCard]) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        bjPlayerCards.sublayers?.forEach { $0.removeFromSuperlayer() }
+        bjDealerCards.sublayers?.forEach { $0.removeFromSuperlayer() }
+        CATransaction.commit()
+        for (i, c) in player.enumerated() {
+            addCard(c, to: bjPlayerCards, index: i, delay: Double(i) * 0.22)
+        }
+        for (i, c) in dealer.enumerated() {
+            addCard(i == 1 ? nil : c, to: bjDealerCards, index: i, delay: 0.11 + Double(i) * 0.22)
+        }
+    }
+
+    func bjAddCard(_ c: PlayingCard, dealer: Bool, index: Int) {
+        addCard(c, to: dealer ? bjDealerCards : bjPlayerCards, index: index, delay: 0)
+    }
+
+    /// Retourne la carte cachée du croupier d'un coup de pouce
+    func bjRevealHole(_ c: PlayingCard) {
+        guard let l = bjDealerCards.sublayers?.dropFirst().first else { return }
+        let flip = CAKeyframeAnimation(keyPath: "transform.scale.x")
+        flip.values = [1, 0.04, 1]
+        flip.keyTimes = [0, 0.5, 1]
+        flip.duration = 0.36
+        l.add(flip, forKey: "flip")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            l.contents = CasinoArt.card(rank: c.rank, suit: c.suit, height: self.bjCardH)
+            CATransaction.commit()
+        }
+    }
+
+    func bjSetTotals(player: Int?, dealer: Int?) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        bjPlayerTotal.contents = player.flatMap { CasinoArt.sevenSegment($0, digits: 2, height: 13) }
+        bjDealerTotal.contents = dealer.flatMap { CasinoArt.sevenSegment($0, digits: 2, height: 13) }
+        CATransaction.commit()
+    }
+
+    func bjButtons(enabled: Bool) {
+        bjButtonsOn = enabled
+        [bjHitBtn, bjStandBtn].forEach { $0.opacity = enabled ? 1 : 0.35 }
+    }
+
+    func bjAction(at p: CGPoint) -> BJAction? {
+        guard bjButtonsOn else { return nil }
+        if Self.bjHitRect.insetBy(dx: -4, dy: -3).contains(p) { return .hit }
+        if Self.bjStandRect.insetBy(dx: -4, dy: -3).contains(p) { return .stand }
+        return nil
     }
 
     // MARK: - État

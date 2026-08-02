@@ -29,6 +29,11 @@ gold lettering. Zero emoji, zero imported images.
 
 ## The cabinet
 
+- **Two games, one wallet** — the slot machine, or a bare-knuckle blackjack
+  (🎰 menu → Game): hit, stand, dealer draws to 17, cards dealt straight
+  out of the notch. Same credits, same brass.
+- **Plays hard to get** — the island only slides out once your cursor has
+  lingered two seconds under the notch. Accidental jackpots are nobody's fun.
 - **Dot-matrix display** — homemade 5×7 font, amber dots, column-by-column
   stepped scrolling like a real ticker. Accents get dropped at render time,
   just like on real LED boards.
@@ -57,6 +62,7 @@ Sources/
 ├── CasinoArt.swift        # every asset, drawn in Core Graphics
 ├── DotMatrix.swift        # the 5×7 LED display and its homemade font
 ├── SlotEngine.swift       # odds rigged with love, credits included
+├── BlackjackEngine.swift  # single deck, dealer stands on 17
 ├── Personality.swift      # Slotch's voice, FR/EN
 ├── EffectsOverlay.swift   # the full-screen effects
 └── SoundBox.swift         # system sounds, guilty as charged

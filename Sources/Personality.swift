@@ -122,7 +122,41 @@ enum Personality {
     static var bannerDiamond: String { one("DIAMANTS", "DIAMONDS") }
     static var bannerShoe: String { one("VEINARD", "LUCKY YOU") }
 
+    // Blackjack
+    static var bjHit: String { one("TIRER", "HIT") }
+    static var bjStand: String { one("RESTER", "STAND") }
+    static var bjChoice: String { one("Tirer ou rester ?", "Hit or stand?") }
+    static var bjDealing: String { one("On distribue…", "Dealing…") }
+    static var bjBust: String { one("BOUM. Trop gourmand.", "BUST. Too greedy.") }
+    static var bjPush: String { one("Égalité. Personne ne pleure.", "Push. Nobody cries.") }
+    static var bjBlackjack: String { one("BLACKJACK ! La classe.", "BLACKJACK! Stylish.") }
+    static var bjWin: String {
+        pick([
+            "La banque pleure.",
+            "Bien joué, flambeur.",
+            "Le croupier fait la tête.",
+        ], [
+            "The house weeps.",
+            "Nicely played, high roller.",
+            "The dealer sulks.",
+        ])
+    }
+    static var bjLose: String {
+        pick([
+            "La banque gagne. Toujours.",
+            "Le croupier sourit. Mauvais signe.",
+            "Retente, il bluffe.",
+        ], [
+            "The house wins. Always.",
+            "The dealer smiles. Bad sign.",
+            "Try again, he's bluffing.",
+        ])
+    }
+
     // Menu barre des menus
+    static var menuGame: String { one("Jeu", "Game") }
+    static var gameSlots: String { one("Machine à sous", "Slot machine") }
+    static var gameBlackjack: String { "Blackjack" }
     static var menuTestSpin: String { one("Tirage d'essai", "Test spin") }
     static var menuMute: String { one("Silencieux", "Mute") }
     static var menuLaunchAtLogin: String { one("Lancer au démarrage", "Launch at login") }

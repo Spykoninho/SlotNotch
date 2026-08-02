@@ -28,6 +28,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(statsItem)
         menu.addItem(.separator())
 
+        // Sous-menu jeu, coche sur le jeu actif
+        let gameMenu = NSMenu()
+        for (mode, title) in [(GameMode.slots, Personality.gameSlots),
+                              (GameMode.blackjack, Personality.gameBlackjack)] {
+            let item = NSMenuItem(title: title, action: #selector(pickGame(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = mode.rawValue
+            item.state = island.gameMode == mode ? .on : .off
+            gameMenu.addItem(item)
+        }
+        let gameItem = NSMenuItem(title: Personality.menuGame, action: nil, keyEquivalent: "")
+        menu.addItem(gameItem)
+        menu.setSubmenu(gameMenu, for: gameItem)
+
         let spin = NSMenuItem(title: Personality.menuTestSpin, action: #selector(testSpin), keyEquivalent: "t")
         spin.target = self
         menu.addItem(spin)
@@ -87,6 +101,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func pickLanguage(_ sender: NSMenuItem) {
         guard let raw = sender.representedObject as? String, let lang = Lang(rawValue: raw) else { return }
         L10n.lang = lang
+        island.setGameMode(island.gameMode)  // regrave les libellés dans la nouvelle langue
+        rebuildMenu()
+    }
+
+    @objc private func pickGame(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String, let mode = GameMode(rawValue: raw) else { return }
+        island.setGameMode(mode)
         rebuildMenu()
     }
 

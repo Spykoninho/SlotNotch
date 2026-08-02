@@ -1,10 +1,12 @@
 import AppKit
 
-// Capte les clics sur la pilule (hors bande barre des menus)
+// Capte les clics sur la pilule (hors bande barre des menus), avec leur position
 final class ClickCatcherView: NSView {
-    var onTap: (() -> Void)?
+    var onTapAt: ((NSPoint) -> Void)?
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
-    override func mouseDown(with event: NSEvent) { onTap?() }
+    override func mouseDown(with event: NSEvent) {
+        onTapAt?(convert(event.locationInWindow, from: nil))
+    }
     override func resetCursorRects() { addCursorRect(bounds, cursor: .pointingHand) }
 }
 
@@ -14,12 +16,19 @@ final class IslandController {
     private let clickPanel: NSPanel
     private let view: IslandView
     private let engine = SlotEngine()
+    private let bj = BlackjackEngine()
 
     private var expanded = false
     private var spinning = false
+    private var bjBusy = false
     private var resultHoldUntil: Date = .distantPast
     private var lastInside: Date = .distantPast
+    private var hoverSince: Date?
     private var timer: Timer?
+
+    var gameMode: GameMode {
+        GameMode(rawValue: UserDefaults.standard.string(forKey: "game") ?? "") ?? .slots
+    }
 
     var statsChanged: (() -> Void)?
 
@@ -61,8 +70,9 @@ final class IslandController {
         clickPanel.ignoresMouseEvents = false
         clickPanel.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
         let catcher = ClickCatcherView(frame: clickPanel.contentLayoutRect)
-        catcher.onTap = { [weak self] in self?.spinRequested() }
+        catcher.onTapAt = { [weak self] p in self?.tapped(at: p) }
         clickPanel.contentView = catcher
+        view.setMode(gameMode)
 
         reposition()
         panel.orderFrontRegardless()
@@ -91,6 +101,17 @@ final class IslandController {
             let me = Unmanaged<IslandController>.fromOpaque(obs).takeUnretainedValue()
             DispatchQueue.main.async { me.debugDump() }
         }, "fr.mathis.slotch.dump" as CFString, nil, .deliverImmediately)
+        // Pilotage blackjack scriptable, pour le debug
+        CFNotificationCenterAddObserver(center, observer, { _, obs, _, _, _ in
+            guard let obs else { return }
+            let me = Unmanaged<IslandController>.fromOpaque(obs).takeUnretainedValue()
+            DispatchQueue.main.async { if me.gameMode == .blackjack, !me.bjBusy { me.bjHit() } }
+        }, "fr.mathis.slotch.hit" as CFString, nil, .deliverImmediately)
+        CFNotificationCenterAddObserver(center, observer, { _, obs, _, _, _ in
+            guard let obs else { return }
+            let me = Unmanaged<IslandController>.fromOpaque(obs).takeUnretainedValue()
+            DispatchQueue.main.async { if me.gameMode == .blackjack, !me.bjBusy { me.bjStand() } }
+        }, "fr.mathis.slotch.stand" as CFString, nil, .deliverImmediately)
     }
 
     // Autoportrait de l'île dans /tmp/slotch_dump.png : `notifyutil -p fr.mathis.slotch.dump`
@@ -161,7 +182,16 @@ final class IslandController {
     private func tick() {
         let mouse = NSEvent.mouseLocation
         if !expanded {
-            if triggerZone.contains(mouse) { expand() }
+            // 2 s de patience sous l'encoche : les passages accidentels ne comptent pas
+            if triggerZone.contains(mouse) {
+                if hoverSince == nil { hoverSince = Date() }
+                else if Date().timeIntervalSince(hoverSince!) >= 2.0 {
+                    hoverSince = nil
+                    expand()
+                }
+            } else {
+                hoverSince = nil
+            }
         } else {
             let keepZone = pillScreenRect.insetBy(dx: -60, dy: -50).union(triggerZone)
             if keepZone.contains(mouse) { lastInside = Date() }
@@ -175,12 +205,16 @@ final class IslandController {
         lastInside = Date()
         panel.orderFrontRegardless()
         clickPanel.orderFrontRegardless()
-        view.setMessage(Personality.greeting)
-        view.setLED(.idle)
         view.setCredits(engine.credits)
         view.revealPill()
         view.bulbsChase(rounds: 1)
         SoundBox.play("Pop", volume: 0.25)
+        if gameMode == .blackjack {
+            bjEnter()
+        } else {
+            view.setMessage(Personality.greeting)
+            view.setLED(.idle)
+        }
     }
 
     private func collapse() {
@@ -189,7 +223,13 @@ final class IslandController {
         view.concealPill(animated: true)
     }
 
+    // Action principale : tirage aux rouleaux, ou distribution au blackjack
     func spinRequested() {
+        if gameMode == .blackjack {
+            if !expanded { expandForced() }
+            else if bj.state != .playerTurn { bjDeal() }
+            return
+        }
         guard !spinning else { return }
         if !expanded { expandForced() }
         spinning = true
@@ -215,6 +255,179 @@ final class IslandController {
         view.setCredits(engine.credits)
         view.revealPill()
         view.bulbsChase(rounds: 1)
+        if gameMode == .blackjack { bjEnter() }
+    }
+
+    // MARK: - Blackjack
+
+    private func tapped(at p: NSPoint) {
+        guard gameMode == .blackjack else { spinRequested(); return }
+        guard !bjBusy else { return }
+        if bj.state == .playerTurn {
+            // Pendant la main, seuls les boutons comptent : pas de tirage accidentel
+            switch view.bjAction(at: p) {
+            case .hit: bjHit()
+            case .stand: bjStand()
+            case nil: break
+            }
+        } else {
+            bjDeal()
+        }
+    }
+
+    // À l'ouverture : reprend la main en cours, sinon distribue
+    private func bjEnter() {
+        view.setLED(.idle)
+        if bj.state == .playerTurn {
+            resultHoldUntil = Date().addingTimeInterval(3)
+            lastInside = Date()
+            view.bjStartHand(player: bj.player, dealer: bj.dealer)
+            view.bjSetTotals(player: bj.playerValue,
+                             dealer: BlackjackEngine.value([bj.dealer[0]]))
+            view.bjButtons(enabled: true)
+            view.setMessage(Personality.bjChoice)
+        } else {
+            bjDeal()
+        }
+    }
+
+    private func bjDeal() {
+        guard !bjBusy else { return }
+        bjBusy = true
+        resultHoldUntil = Date().addingTimeInterval(3)
+        lastInside = Date()
+        bj.deal()
+        view.setCredits(bj.credits)
+        statsChanged?()
+        view.setLED(.spin)
+        view.setMessage(Personality.bjDealing)
+        view.bjSetTotals(player: nil, dealer: nil)
+        view.bjButtons(enabled: false)
+        view.bjStartHand(player: bj.player, dealer: bj.dealer)
+        for i in 0..<4 { SoundBox.play("Tink", volume: 0.25, after: 0.1 + Double(i) * 0.22) }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self else { return }
+            self.bjBusy = false
+            self.view.bjSetTotals(player: self.bj.playerValue,
+                                  dealer: BlackjackEngine.value([self.bj.dealer[0]]))
+            if self.bj.playerHasNatural {
+                self.bjStand()   // 21 d'entrée : on règle direct
+            } else {
+                self.view.setLED(.idle)
+                self.view.bjButtons(enabled: true)
+                self.view.setMessage(Personality.bjChoice)
+                self.lastInside = Date()
+                self.resultHoldUntil = Date().addingTimeInterval(3)
+            }
+        }
+    }
+
+    private func bjHit() {
+        guard bj.state == .playerTurn else { return }
+        let c = bj.hit()
+        resultHoldUntil = Date().addingTimeInterval(3)
+        SoundBox.play("Tink", volume: 0.3)
+        view.bjAddCard(c, dealer: false, index: bj.player.count - 1)
+        view.bjSetTotals(player: bj.playerValue,
+                         dealer: BlackjackEngine.value([bj.dealer[0]]))
+        lastInside = Date()
+        if bj.playerValue > 21 {
+            bjBusy = true
+            view.bjButtons(enabled: false)
+            view.bjRevealHole(bj.dealer[1])
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in self?.bjFinish() }
+        } else if bj.playerValue == 21 {
+            bjStand()
+        }
+    }
+
+    private func bjStand() {
+        guard bj.state == .playerTurn else { return }
+        bjBusy = true
+        view.bjButtons(enabled: false)
+        view.setLED(.spin)
+        view.bjRevealHole(bj.dealer[1])
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
+            guard let self else { return }
+            self.view.bjSetTotals(player: self.bj.playerValue,
+                                  dealer: BlackjackEngine.value(Array(self.bj.dealer.prefix(2))))
+        }
+
+        // Le croupier tire jusqu'à 17, une carte toutes les 0,55 s
+        let drawn = bj.dealerPlay()
+        for (k, c) in drawn.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.75 + Double(k) * 0.55) { [weak self] in
+                guard let self else { return }
+                self.view.bjAddCard(c, dealer: true, index: 2 + k)
+                SoundBox.play("Tink", volume: 0.3)
+                self.view.bjSetTotals(player: self.bj.playerValue,
+                                      dealer: BlackjackEngine.value(Array(self.bj.dealer.prefix(3 + k))))
+            }
+        }
+        let total = 0.95 + Double(drawn.count) * 0.55
+        resultHoldUntil = Date().addingTimeInterval(total + 3.2)
+        DispatchQueue.main.asyncAfter(deadline: .now() + total) { [weak self] in self?.bjFinish() }
+    }
+
+    private func bjFinish() {
+        bjBusy = false
+        view.bjSetTotals(player: bj.playerValue, dealer: bj.dealerValue)
+        let r = bj.settle()
+        view.setCredits(bj.credits)
+        statsChanged?()
+        view.bjButtons(enabled: false)
+        resultHoldUntil = Date().addingTimeInterval(3.2)
+        lastInside = Date()
+
+        var msg: String
+        var tone: MsgTone = .amber
+        switch r.outcome {
+        case .win:
+            msg = Personality.bjWin
+            view.setLED(.win)
+            view.sparkleBurst()
+            view.bulbsChase(rounds: 2)
+            SoundBox.play("Glass", volume: 0.5)
+        case .blackjack:
+            msg = Personality.bjBlackjack
+            tone = .gold
+            view.setLED(.jackpot)
+            view.goldShimmer()
+            view.bulbsFrenzy(duration: 2.5)
+            SoundBox.play("Hero", volume: 0.6)
+        case .push:
+            msg = Personality.bjPush
+            view.setLED(.idle)
+            SoundBox.play("Purr", volume: 0.4)
+        case .lose:
+            msg = Personality.bjLose
+            tone = .red
+            view.setLED(.lose)
+            SoundBox.play("Basso", volume: 0.4)
+        case .bust:
+            msg = Personality.bjBust
+            tone = .red
+            view.setLED(.lose)
+            SoundBox.play("Basso", volume: 0.5)
+        }
+        if r.houseRefill { msg += " " + Personality.houseGift }
+        view.setMessage(msg, tone: tone)
+    }
+
+    func setGameMode(_ m: GameMode) {
+        UserDefaults.standard.set(m.rawValue, forKey: "game")
+        view.setMode(m)
+        if expanded {
+            if m == .blackjack {
+                bjEnter()
+            } else {
+                view.setMessage(Personality.greeting)
+                view.setLED(.idle)
+                view.setCredits(engine.credits)
+            }
+        }
+        statsChanged?()
     }
 
     private func resolve(_ r: SpinResult) {

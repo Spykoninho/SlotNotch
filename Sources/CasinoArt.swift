@@ -390,6 +390,118 @@ enum CasinoArt {
         }
     }
 
+    // MARK: - Cartes à jouer
+
+    static let feltGreen = NSColor(calibratedRed: 0.09, green: 0.35, blue: 0.20, alpha: 1)
+
+    private static func suitPath(in r: NSRect, suit: Int) -> NSBezierPath {
+        func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint {
+            NSPoint(x: r.minX + x * r.width, y: r.minY + y * r.height)
+        }
+        let path = NSBezierPath()
+        switch suit {
+        case 0: // pique : cœur inversé + pied
+            path.move(to: p(0.5, 0.95))
+            path.curve(to: p(0.06, 0.42), controlPoint1: p(0.22, 0.75), controlPoint2: p(0.06, 0.60))
+            path.curve(to: p(0.5, 0.36), controlPoint1: p(0.06, 0.20), controlPoint2: p(0.35, 0.16))
+            path.curve(to: p(0.94, 0.42), controlPoint1: p(0.65, 0.16), controlPoint2: p(0.94, 0.20))
+            path.curve(to: p(0.5, 0.95), controlPoint1: p(0.94, 0.60), controlPoint2: p(0.78, 0.75))
+            path.close()
+            path.move(to: p(0.42, 0.30))
+            path.line(to: p(0.58, 0.30))
+            path.line(to: p(0.66, 0.02))
+            path.line(to: p(0.34, 0.02))
+            path.close()
+        case 1: // cœur
+            path.move(to: p(0.5, 0.08))
+            path.curve(to: p(0.06, 0.62), controlPoint1: p(0.22, 0.28), controlPoint2: p(0.06, 0.44))
+            path.curve(to: p(0.5, 0.68), controlPoint1: p(0.06, 0.86), controlPoint2: p(0.35, 0.90))
+            path.curve(to: p(0.94, 0.62), controlPoint1: p(0.65, 0.90), controlPoint2: p(0.94, 0.86))
+            path.curve(to: p(0.5, 0.08), controlPoint1: p(0.94, 0.44), controlPoint2: p(0.78, 0.28))
+            path.close()
+        case 2: // carreau
+            path.move(to: p(0.5, 0.98)); path.line(to: p(0.88, 0.5))
+            path.line(to: p(0.5, 0.02)); path.line(to: p(0.12, 0.5))
+            path.close()
+        default: // trèfle : trois lobes + pied
+            path.appendOval(in: NSRect(x: p(0.31, 0).x, y: p(0, 0.52).y, width: 0.38 * r.width, height: 0.38 * r.height))
+            path.appendOval(in: NSRect(x: p(0.05, 0).x, y: p(0, 0.24).y, width: 0.38 * r.width, height: 0.38 * r.height))
+            path.appendOval(in: NSRect(x: p(0.57, 0).x, y: p(0, 0.24).y, width: 0.38 * r.width, height: 0.38 * r.height))
+            path.move(to: p(0.44, 0.30))
+            path.line(to: p(0.56, 0.30))
+            path.line(to: p(0.65, 0.02))
+            path.line(to: p(0.35, 0.02))
+            path.close()
+        }
+        return path
+    }
+
+    static func rankLabel(_ rank: Int) -> String {
+        let fr = L10n.lang == .fr
+        switch rank {
+        case 1: return "A"
+        case 11: return fr ? "V" : "J"
+        case 12: return fr ? "D" : "Q"
+        case 13: return fr ? "R" : "K"
+        default: return "\(rank)"
+        }
+    }
+
+    /// Carte à jouer dessinée main — rank 1...13, suit 0:♠ 1:♥ 2:♦ 3:♣
+    static func card(rank: Int, suit: Int, height h: CGFloat) -> CGImage? {
+        let w = h * 0.72
+        return cg("card-\(rank)-\(suit)-\(Int(h))-\(L10n.lang.rawValue)", NSSize(width: w, height: h)) {
+            let bg = NSBezierPath(roundedRect: NSRect(x: 0.5, y: 0.5, width: w - 1, height: h - 1),
+                                  xRadius: h * 0.09, yRadius: h * 0.09)
+            NSColor(calibratedRed: 0.99, green: 0.98, blue: 0.95, alpha: 1).setFill()
+            bg.fill()
+            NSColor(calibratedWhite: 0.55, alpha: 0.9).setStroke()
+            bg.lineWidth = 0.8
+            bg.stroke()
+
+            let color = (suit == 1 || suit == 2)
+                ? NSColor(calibratedRed: 0.76, green: 0.09, blue: 0.11, alpha: 1)
+                : NSColor(calibratedRed: 0.10, green: 0.10, blue: 0.12, alpha: 1)
+
+            let font = NSFont(name: "Copperplate-Bold", size: h * 0.30) ?? NSFont.boldSystemFont(ofSize: h * 0.30)
+            let label = NSAttributedString(string: rankLabel(rank), attributes: [
+                .font: font, .foregroundColor: color,
+            ])
+            label.draw(at: NSPoint(x: w * 0.09, y: h * 0.60))
+
+            color.setFill()
+            suitPath(in: NSRect(x: w * 0.34, y: h * 0.08, width: w * 0.56, height: w * 0.56), suit: suit).fill()
+        }
+    }
+
+    /// Dos de carte : bordeaux, treillis doré
+    static func cardBack(height h: CGFloat) -> CGImage? {
+        let w = h * 0.72
+        return cg("cardback-\(Int(h))", NSSize(width: w, height: h)) {
+            let bg = NSBezierPath(roundedRect: NSRect(x: 0.5, y: 0.5, width: w - 1, height: h - 1),
+                                  xRadius: h * 0.09, yRadius: h * 0.09)
+            burgundy.setFill()
+            bg.fill()
+            NSGraphicsContext.saveGraphicsState()
+            NSBezierPath(roundedRect: NSRect(x: w * 0.10, y: h * 0.08, width: w * 0.80, height: h * 0.84),
+                         xRadius: h * 0.05, yRadius: h * 0.05).addClip()
+            brass.withAlphaComponent(0.55).setStroke()
+            let lattice = NSBezierPath()
+            var t: CGFloat = -h
+            while t < w + h {
+                lattice.move(to: NSPoint(x: t, y: 0)); lattice.line(to: NSPoint(x: t + h, y: h))
+                lattice.move(to: NSPoint(x: t + h, y: 0)); lattice.line(to: NSPoint(x: t, y: h))
+                t += h * 0.22
+            }
+            lattice.lineWidth = 0.7
+            lattice.stroke()
+            NSGraphicsContext.restoreGraphicsState()
+            brassDark.setStroke()
+            bg.lineWidth = 1
+            bg.stroke()
+        }
+    }
+
     // MARK: - Texte doré biseauté (Phosphate = lettrage de marquise)
 
     static func goldText(_ text: String, fontSize: CGFloat) -> CGImage? {
