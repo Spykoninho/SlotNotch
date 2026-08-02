@@ -11,6 +11,8 @@ your screen.
 Everything is hand-drawn in Core Graphics: symbols, coins, gold bars, bulbs,
 gold lettering. Zero emoji, zero imported images.
 
+**[Download for macOS](https://github.com/Spykoninho/SlotNotch/releases/latest)** — free, notarized, macOS 12+.
+
 ## The combinations
 
 | Reels | Full-screen effect |
@@ -43,35 +45,6 @@ gold lettering. Zero emoji, zero imported images.
 - **Rigged near-misses** — 25% of losses show 7·7·✗, because drama is life.
 - **It talks** — French or English (🎰 menu → Language), taunts on the ticker,
   a mood lamp, a lever that pulls itself.
-
-## Build & run
-
-```bash
-./build.sh --run
-```
-
-That's it. No Xcode, no dependencies, no system permissions.
-`swiftc` + AppKit + Core Animation, ~2,000 lines.
-
-- The app lives in the menu bar: **🎰** (stats, test spin, language,
-  launch at login, mute, quit).
-- No Dock icon, no focus stealing: the window is a non-activating panel,
-  click-through whenever the island is tucked away.
-- No notch? Works too — the island drops from the top-center of the screen,
-  right where the notch should have been. Slotch doesn't judge your hardware.
-
-## Publishing
-
-```bash
-./tools/make_icon.sh   # regenerates the icon from code (CasinoArt → .icns)
-./release.sh 1.0       # Developer ID build + notarization + DMG
-```
-
-`release.sh` requires a "Developer ID Application" certificate and a
-notarytool profile (`xcrun notarytool store-credentials slotch-notary …`,
-see the script header). It prints the sha256 to paste into
-[packaging/homebrew/slotch.rb](packaging/homebrew/slotch.rb) for the cask.
-The landing page lives in [docs/](docs/) — ready for GitHub Pages.
 
 ## Anatomy
 
